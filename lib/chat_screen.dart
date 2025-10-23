@@ -50,54 +50,48 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('TouchFishAstra - ${widget.username}'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(8),
-              itemCount: _messages.length,
-              itemBuilder: (_, i) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Text(_messages[i]),
-              ),
-            ),
-          ),
-          const Divider(height: 1),
-          Padding(
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
             padding: const EdgeInsets.all(8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: const InputDecoration(
-                      hintText: 'Type message...',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: null,
-                    onSubmitted: (_) => _send(),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.attach_file),
-                  onPressed: _sendFile,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: _send,
-                ),
-              ],
+            itemCount: _messages.length,
+            itemBuilder: (_, i) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Text(_messages[i]),
             ),
           ),
-        ],
-      ),
+        ),
+        const Divider(height: 1),
+        Padding(
+          padding: const EdgeInsets.all(8),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  decoration: const InputDecoration(
+                    hintText: 'Type message...',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: null,
+                  onSubmitted: (_) => _send(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.attach_file),
+                onPressed: _sendFile,
+              ),
+              IconButton(
+                icon: const Icon(Icons.send),
+                onPressed: _send,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

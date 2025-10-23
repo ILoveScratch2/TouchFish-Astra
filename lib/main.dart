@@ -1,11 +1,26 @@
 import 'package:flutter/material.dart';
 import 'socket_service.dart';
-import 'chat_screen.dart';
+import 'main_navigation.dart';
 
 void main() => runApp(const TouchFishAstra());
 
-class TouchFishAstra extends StatelessWidget {
+class TouchFishAstra extends StatefulWidget {
   const TouchFishAstra({super.key});
+
+  @override
+  State<TouchFishAstra> createState() => _TouchFishAstraState();
+}
+
+class _TouchFishAstraState extends State<TouchFishAstra> {
+  var _themeMode = ThemeMode.system;
+
+  void _toggleTheme() {
+    setState(() {
+      _themeMode = _themeMode == ThemeMode.light 
+          ? ThemeMode.dark 
+          : ThemeMode.light;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,13 +30,31 @@ class TouchFishAstra extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const ConnectScreen(),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+      ),
+      themeMode: _themeMode,
+      home: ConnectScreen(
+        onThemeToggle: _toggleTheme,
+        currentTheme: _themeMode,
+      ),
     );
   }
 }
 
 class ConnectScreen extends StatefulWidget {
-  const ConnectScreen({super.key});
+  final VoidCallback onThemeToggle;
+  final ThemeMode currentTheme;
+
+  const ConnectScreen({
+    super.key,
+    required this.onThemeToggle,
+    required this.currentTheme,
+  });
 
   @override
   State<ConnectScreen> createState() => _ConnectScreenState();
@@ -54,7 +87,12 @@ class _ConnectScreenState extends State<ConnectScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => ChatScreen(socket: socket, username: username),
+          builder: (_) => MainNavigation(
+            socket: socket,
+            username: username,
+            currentTheme: widget.currentTheme,
+            onThemeToggle: widget.onThemeToggle,
+          ),
         ),
       );
     } else {
