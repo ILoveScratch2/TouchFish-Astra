@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'socket_service.dart';
+import 'app_localizations.dart';
 
 class ChatScreen extends StatefulWidget {
   final SocketService socket;
@@ -50,6 +51,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    
     return Column(
       children: [
         Expanded(
@@ -71,9 +74,9 @@ class _ChatScreenState extends State<ChatScreen> {
               Expanded(
                 child: TextField(
                   controller: _controller,
-                  decoration: const InputDecoration(
-                    hintText: 'Type message...',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    hintText: l10n.typeMessage,
+                    border: const OutlineInputBorder(),
                   ),
                   maxLines: null,
                   onSubmitted: (_) => _send(),
@@ -83,10 +86,12 @@ class _ChatScreenState extends State<ChatScreen> {
               IconButton(
                 icon: const Icon(Icons.attach_file),
                 onPressed: _sendFile,
+                tooltip: l10n.attachFile,
               ),
               IconButton(
                 icon: const Icon(Icons.send),
                 onPressed: _send,
+                tooltip: l10n.send,
               ),
             ],
           ),

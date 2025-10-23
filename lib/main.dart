@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'socket_service.dart';
 import 'main_navigation.dart';
 import 'settings_screen.dart';
+import 'app_localizations.dart';
+import 'constants.dart';
 
 void main() => runApp(const TouchFishAstra());
 
@@ -15,22 +18,26 @@ class TouchFishAstra extends StatefulWidget {
 
 class _TouchFishAstraState extends State<TouchFishAstra> {
   var _themeMode = ThemeMode.system;
+  var _locale = const Locale('en');
 
   @override
   void initState() {
     super.initState();
-    _loadTheme();
+    _loadPreferences();
   }
 
-  Future<void> _loadTheme() async {
+  Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     final theme = prefs.getString('theme_mode') ?? 'system';
+    final lang = prefs.getString('language') ?? 'en';
+    
     setState(() {
       _themeMode = theme == 'dark' 
           ? ThemeMode.dark 
           : theme == 'light' 
               ? ThemeMode.light 
               : ThemeMode.system;
+      _locale = Locale(lang);
     });
   }
 
@@ -50,10 +57,31 @@ class _TouchFishAstraState extends State<TouchFishAstra> {
     });
   }
 
+  Future<void> _changeLanguage(String langCode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('language', langCode);
+    
+    setState(() {
+      _locale = Locale(langCode);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'TouchFishAstra',
+      // i18n配置 - 就这三行，简单粗暴
+      locale: _locale,
+      localizationsDelegates: const [
+        AppLocalizationsDelegate(),
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('zh'),
+        Locale('en'),
+      ],
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
@@ -68,7 +96,9 @@ class _TouchFishAstraState extends State<TouchFishAstra> {
       themeMode: _themeMode,
       home: ConnectScreen(
         onThemeToggle: _toggleTheme,
+        onLanguageChange: _changeLanguage,
         currentTheme: _themeMode,
+        currentLocale: _locale,
       ),
     );
   }
@@ -76,12 +106,16 @@ class _TouchFishAstraState extends State<TouchFishAstra> {
 
 class ConnectScreen extends StatefulWidget {
   final VoidCallback onThemeToggle;
+  final Function(String) onLanguageChange;
   final ThemeMode currentTheme;
+  final Locale currentLocale;
 
   const ConnectScreen({
     super.key,
     required this.onThemeToggle,
+    required this.onLanguageChange,
     required this.currentTheme,
+    required this.currentLocale,
   });
 
   @override
@@ -95,12 +129,13 @@ class _ConnectScreenState extends State<ConnectScreen> {
   var _connecting = false;
 
   Future<void> _connect() async {
+    final l10n = AppLocalizations.of(context);
     final ip = _ipController.text.trim();
     final port = int.tryParse(_portController.text.trim());
     final username = _usernameController.text.trim();
 
     if (ip.isEmpty || port == null || username.isEmpty) {
-      _showError('Fill all fields');
+      _showError(l10n.fillAllFields);
       return;
     }
 
@@ -119,13 +154,15 @@ class _ConnectScreenState extends State<ConnectScreen> {
             socket: socket,
             username: username,
             currentTheme: widget.currentTheme,
+            currentLocale: widget.currentLocale,
             onThemeToggle: widget.onThemeToggle,
+            onLanguageChange: widget.onLanguageChange,
           ),
         ),
       );
     } else {
       setState(() => _connecting = false);
-      _showError('Connection failed');
+      _showError(l10n.connectionFailed);
     }
   }
 
@@ -135,9 +172,11 @@ class _ConnectScreenState extends State<ConnectScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('TouchFishAstra'),
+        title: const Text(AppConstants.appName),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       floatingActionButton: FloatingActionButton(
@@ -147,12 +186,14 @@ class _ConnectScreenState extends State<ConnectScreen> {
             MaterialPageRoute(
               builder: (_) => Scaffold(
                 appBar: AppBar(
-                  title: const Text('Settings'),
+                  title: Text(l10n.settings),
                   backgroundColor: Theme.of(context).colorScheme.inversePrimary,
                 ),
                 body: SettingsScreen(
                   currentTheme: widget.currentTheme,
+                  currentLocale: widget.currentLocale,
                   onThemeToggle: widget.onThemeToggle,
+                  onLanguageChange: widget.onLanguageChange,
                 ),
               ),
             ),
@@ -172,34 +213,34 @@ class _ConnectScreenState extends State<ConnectScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
-                    'TouchFishAstra',
+                    AppConstants.appName,
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  const Text('v0.1.0 by ILoveScratch2'),
+                  Text('${l10n.version} ${AppConstants.version} by ${AppConstants.author}'),
                   const SizedBox(height: 32),
                   TextField(
                     controller: _ipController,
-                    decoration: const InputDecoration(
-                      labelText: 'Server IP',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.serverIp,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: _portController,
-                    decoration: const InputDecoration(
-                      labelText: 'Port',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.port,
+                      border: const OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: _usernameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Username',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.username,
+                      border: const OutlineInputBorder(),
                     ),
                     onSubmitted: (_) => _connect(),
                   ),
@@ -215,7 +256,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                               height: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('Connect'),
+                          : Text(l10n.connect),
                     ),
                   ),
                 ],
