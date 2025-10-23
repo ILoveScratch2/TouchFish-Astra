@@ -1,6 +1,8 @@
 # TouchFish Astra
 
-一个跨平台的TouchFish客户端
+<center> <img src="logo.jpg" alt="TouchFish Astra Logo" width="200"/> </center>
+
+<center>一个跨平台的TouchFish客户端</center>
 
 ## 简介
 
