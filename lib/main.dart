@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'socket_service.dart';
 import 'main_navigation.dart';
+import 'settings_screen.dart';
 
 void main() => runApp(const TouchFishAstra());
 
@@ -14,11 +16,37 @@ class TouchFishAstra extends StatefulWidget {
 class _TouchFishAstraState extends State<TouchFishAstra> {
   var _themeMode = ThemeMode.system;
 
-  void _toggleTheme() {
+  @override
+  void initState() {
+    super.initState();
+    _loadTheme();
+  }
+
+  Future<void> _loadTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    final theme = prefs.getString('theme_mode') ?? 'system';
     setState(() {
-      _themeMode = _themeMode == ThemeMode.light 
+      _themeMode = theme == 'dark' 
           ? ThemeMode.dark 
-          : ThemeMode.light;
+          : theme == 'light' 
+              ? ThemeMode.light 
+              : ThemeMode.system;
+    });
+  }
+
+  Future<void> _toggleTheme() async {
+    final newMode = _themeMode == ThemeMode.light 
+        ? ThemeMode.dark 
+        : ThemeMode.light;
+    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      'theme_mode', 
+      newMode == ThemeMode.dark ? 'dark' : 'light',
+    );
+    
+    setState(() {
+      _themeMode = newMode;
     });
   }
 
@@ -111,6 +139,28 @@ class _ConnectScreenState extends State<ConnectScreen> {
       appBar: AppBar(
         title: const Text('TouchFishAstra'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => Scaffold(
+                    appBar: AppBar(
+                      title: const Text('Settings'),
+                      backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+                    ),
+                    body: SettingsScreen(
+                      currentTheme: widget.currentTheme,
+                      onThemeToggle: widget.onThemeToggle,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Center(
         child: SizedBox(
