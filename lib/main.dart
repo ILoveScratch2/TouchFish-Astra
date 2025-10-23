@@ -139,29 +139,28 @@ class _ConnectScreenState extends State<ConnectScreen> {
       appBar: AppBar(
         title: const Text('TouchFishAstra'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => Scaffold(
-                    appBar: AppBar(
-                      title: const Text('Settings'),
-                      backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-                    ),
-                    body: SettingsScreen(
-                      currentTheme: widget.currentTheme,
-                      onThemeToggle: widget.onThemeToggle,
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => Scaffold(
+                appBar: AppBar(
+                  title: const Text('Settings'),
+                  backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+                ),
+                body: SettingsScreen(
+                  currentTheme: widget.currentTheme,
+                  onThemeToggle: widget.onThemeToggle,
+                ),
+              ),
+            ),
+          );
+        },
+        child: const Icon(Icons.settings),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       body: Center(
         child: SizedBox(
           width: 400,
