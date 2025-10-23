@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'socket_service.dart';
@@ -17,13 +18,15 @@ class _ChatScreenState extends State<ChatScreen> {
   final _messages = <String>[];
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
+  StreamSubscription<String>? _subscription;
 
   @override
   void initState() {
     super.initState();
-    widget.socket.messages.listen((msg) {
+    _subscription = widget.socket.messages.listen((msg) {
+      if (!mounted) return;
       setState(() => _messages.add(msg));
-      Future.delayed(const Duration(milliseconds: 50), _scrollDown);
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollDown());
     });
   }
 
@@ -102,6 +105,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    _subscription?.cancel();
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();

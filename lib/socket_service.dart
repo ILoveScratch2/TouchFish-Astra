@@ -65,6 +65,7 @@ class SocketService {
   void disconnect() {
     _socket?.close();
     _socket = null;
-    _messageController.close();
+    // Don't close the controller - let subscribers cancel themselves
+    // This prevents "bad state" errors when multiple widgets are listening
   }
 }
