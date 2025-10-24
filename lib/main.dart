@@ -177,7 +177,6 @@ class _ConnectScreenState extends State<ConnectScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(AppConstants.appName),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -187,7 +186,6 @@ class _ConnectScreenState extends State<ConnectScreen> {
               builder: (_) => Scaffold(
                 appBar: AppBar(
                   title: Text(l10n.settings),
-                  backgroundColor: Theme.of(context).colorScheme.inversePrimary,
                 ),
                 body: SettingsScreen(
                   currentTheme: widget.currentTheme,
