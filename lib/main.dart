@@ -19,11 +19,20 @@ class TouchFishAstra extends StatefulWidget {
 class _TouchFishAstraState extends State<TouchFishAstra> {
   var _themeMode = ThemeMode.system;
   var _locale = const Locale('en');
+  SocketService? _socket;
+  String? _username;
 
   @override
   void initState() {
     super.initState();
     _loadPreferences();
+  }
+
+  void _onConnected(SocketService socket, String username) {
+    setState(() {
+      _socket = socket;
+      _username = username;
+    });
   }
 
   Future<void> _loadPreferences() async {
@@ -94,12 +103,22 @@ class _TouchFishAstraState extends State<TouchFishAstra> {
         useMaterial3: true,
       ),
       themeMode: _themeMode,
-      home: ConnectScreen(
-        onThemeToggle: _toggleTheme,
-        onLanguageChange: _changeLanguage,
-        currentTheme: _themeMode,
-        currentLocale: _locale,
-      ),
+      home: _socket != null && _username != null
+          ? MainNavigation(
+              socket: _socket!,
+              username: _username!,
+              currentTheme: _themeMode,
+              currentLocale: _locale,
+              onThemeToggle: _toggleTheme,
+              onLanguageChange: _changeLanguage,
+            )
+          : ConnectScreen(
+              onThemeToggle: _toggleTheme,
+              onLanguageChange: _changeLanguage,
+              currentTheme: _themeMode,
+              currentLocale: _locale,
+              onConnected: _onConnected,
+            ),
     );
   }
 }
@@ -109,6 +128,7 @@ class ConnectScreen extends StatefulWidget {
   final Function(String) onLanguageChange;
   final ThemeMode currentTheme;
   final Locale currentLocale;
+  final Function(SocketService, String) onConnected;
 
   const ConnectScreen({
     super.key,
@@ -116,6 +136,7 @@ class ConnectScreen extends StatefulWidget {
     required this.onLanguageChange,
     required this.currentTheme,
     required this.currentLocale,
+    required this.onConnected,
   });
 
   @override
@@ -147,19 +168,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
     if (!mounted) return;
 
     if (success) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => MainNavigation(
-            socket: socket,
-            username: username,
-            currentTheme: widget.currentTheme,
-            currentLocale: widget.currentLocale,
-            onThemeToggle: widget.onThemeToggle,
-            onLanguageChange: widget.onLanguageChange,
-          ),
-        ),
-      );
+      widget.onConnected(socket, username);
     } else {
       setState(() => _connecting = false);
       _showError(l10n.connectionFailed);
