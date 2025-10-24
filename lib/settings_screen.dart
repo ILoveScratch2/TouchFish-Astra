@@ -1,9 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'app_localizations.dart';
 import 'constants.dart';
+import 'models/chat_colors.dart';
+import 'chat_screen.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   final ThemeMode currentTheme;
   final Locale currentLocale;
   final VoidCallback onThemeToggle;
@@ -16,6 +22,154 @@ class SettingsScreen extends StatelessWidget {
     required this.onThemeToggle,
     required this.onLanguageChange,
   });
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  ChatColors? _colors;
+  ChatViewMode _viewMode = ChatViewMode.bubble;
+  bool _autoSaveFiles = true;
+  String _downloadPath = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadColors();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    String defaultPath = '';
+    try {
+      if (Platform.isAndroid) {
+        final dir = await getExternalStorageDirectory();
+        defaultPath = dir?.path ?? '';
+      } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+        final dir = await getDownloadsDirectory();
+        defaultPath = dir?.path ?? '';
+      }
+    } catch (_) {
+      defaultPath = '';
+    }
+
+    setState(() {
+      _viewMode = ChatViewMode.values[prefs.getInt('chat_view_mode') ?? 1];
+      _autoSaveFiles = prefs.getBool('auto_save_files') ?? true;
+      _downloadPath = prefs.getString('download_path') ?? defaultPath;
+    });
+  }
+
+  Future<void> _pickDownloadPath() async {
+    final result = await FilePicker.platform.getDirectoryPath();
+    if (result != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('download_path', result);
+      setState(() {
+        _downloadPath = result;
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(SettingsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentTheme != widget.currentTheme) {
+      _loadColors();
+    }
+  }
+
+  Future<void> _loadColors() async {
+    final isDark = widget.currentTheme == ThemeMode.dark;
+    final colors = await ChatColors.load(isDark);
+    setState(() {
+      _colors = colors;
+    });
+  }
+
+  Future<void> _pickColor(
+    BuildContext context,
+    String title,
+    Color currentColor,
+    Function(Color) onColorChanged,
+  ) async {
+    Color? selectedColor;
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: SingleChildScrollView(
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ...Colors.primaries
+                  .map((color) {
+                    return [
+                      _colorOption(context, color[100]!, selectedColor, (c) {
+                        selectedColor = c;
+                        onColorChanged(c);
+                        Navigator.pop(context);
+                      }),
+                      _colorOption(context, color[300]!, selectedColor, (c) {
+                        selectedColor = c;
+                        onColorChanged(c);
+                        Navigator.pop(context);
+                      }),
+                      _colorOption(context, color[700]!, selectedColor, (c) {
+                        selectedColor = c;
+                        onColorChanged(c);
+                        Navigator.pop(context);
+                      }),
+                      _colorOption(context, color[900]!, selectedColor, (c) {
+                        selectedColor = c;
+                        onColorChanged(c);
+                        Navigator.pop(context);
+                      }),
+                    ];
+                  })
+                  .expand((e) => e),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _colorOption(
+    BuildContext context,
+    Color color,
+    Color? selected,
+    Function(Color) onTap,
+  ) {
+    return InkWell(
+      onTap: () => onTap(color),
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: selected == color
+                ? Theme.of(context).colorScheme.primary
+                : Colors.transparent,
+            width: 3,
+          ),
+        ),
+      ),
+    );
+  }
 
   void _showAboutDialog(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -81,6 +235,8 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isDark = widget.currentTheme == ThemeMode.dark;
+    final colors = _colors ?? (isDark ? ChatColors.dark() : ChatColors.light());
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -93,17 +249,19 @@ class SettingsScreen extends StatelessWidget {
         Card(
           child: ListTile(
             leading: Icon(
-              currentTheme == ThemeMode.dark
+              widget.currentTheme == ThemeMode.dark
                   ? Icons.dark_mode
                   : Icons.light_mode,
             ),
             title: Text(l10n.theme),
             subtitle: Text(
-              currentTheme == ThemeMode.dark ? l10n.themeDark : l10n.themeLight,
+              widget.currentTheme == ThemeMode.dark
+                  ? l10n.themeDark
+                  : l10n.themeLight,
             ),
             trailing: Switch(
-              value: currentTheme == ThemeMode.dark,
-              onChanged: (_) => onThemeToggle(),
+              value: widget.currentTheme == ThemeMode.dark,
+              onChanged: (_) => widget.onThemeToggle(),
             ),
           ),
         ),
@@ -113,20 +271,223 @@ class SettingsScreen extends StatelessWidget {
             leading: const Icon(Icons.language),
             title: Text(l10n.language),
             subtitle: Text(
-              currentLocale.languageCode == 'zh' ? '简体中文' : 'English',
+              widget.currentLocale.languageCode == 'zh' ? '简体中文' : 'English',
             ),
             trailing: DropdownButton<String>(
-              value: currentLocale.languageCode,
+              value: widget.currentLocale.languageCode,
               items: const [
                 DropdownMenuItem(value: 'zh', child: Text('简体中文')),
                 DropdownMenuItem(value: 'en', child: Text('English')),
               ],
               onChanged: (value) {
                 if (value != null) {
-                  onLanguageChange(value);
+                  widget.onLanguageChange(value);
                 }
               },
             ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          '聊天设置',
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        Card(
+          child: Column(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.view_module),
+                title: const Text('聊天界面模式'),
+                subtitle: Text(
+                  _viewMode == ChatViewMode.bubble ? '气泡模式' : '列表模式',
+                ),
+                trailing: SegmentedButton<ChatViewMode>(
+                  segments: const [
+                    ButtonSegment(
+                      value: ChatViewMode.bubble,
+                      icon: Icon(Icons.chat_bubble_outline, size: 16),
+                      label: Text('气泡'),
+                    ),
+                    ButtonSegment(
+                      value: ChatViewMode.list,
+                      icon: Icon(Icons.list, size: 16),
+                      label: Text('列表'),
+                    ),
+                  ],
+                  selected: {_viewMode},
+                  onSelectionChanged: (Set<ChatViewMode> selected) async {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setInt('chat_view_mode', selected.first.index);
+                    setState(() {
+                      _viewMode = selected.first;
+                    });
+                  },
+                  style: ButtonStyle(
+                    visualDensity: VisualDensity.compact,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+              ),
+              const Divider(height: 1),
+              SwitchListTile(
+                secondary: const Icon(Icons.save_alt),
+                title: const Text('自动保存接收的文件'),
+                subtitle: const Text('文件将保存到指定文件夹'),
+                value: _autoSaveFiles,
+                onChanged: (value) async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('auto_save_files', value);
+                  setState(() {
+                    _autoSaveFiles = value;
+                  });
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.folder),
+                title: const Text('下载保存路径'),
+                subtitle: Text(
+                  _downloadPath.isEmpty ? '使用默认下载文件夹' : _downloadPath,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_downloadPath.isNotEmpty)
+                      IconButton(
+                        icon: const Icon(Icons.refresh),
+                        tooltip: '重置为默认',
+                        onPressed: () async {
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.remove('download_path');
+                          await _loadSettings();
+                        },
+                      ),
+                    IconButton(
+                      icon: const Icon(Icons.folder_open),
+                      tooltip: '选择文件夹',
+                      onPressed: _pickDownloadPath,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          '聊天颜色设置',
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        Card(
+          child: Column(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.chat_bubble),
+                title: const Text('我的消息气泡颜色'),
+                trailing: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: colors.myMessageBubble,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.grey),
+                  ),
+                ),
+                onTap: () async {
+                  await _pickColor(
+                    context,
+                    '选择我的消息颜色',
+                    colors.myMessageBubble,
+                    (color) async {
+                      final newColors = colors.copyWith(myMessageBubble: color);
+                      await newColors.save();
+                      await _loadColors();
+                    },
+                  );
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.chat_bubble_outline),
+                title: const Text('对方消息气泡颜色'),
+                trailing: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: colors.otherMessageBubble,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.grey),
+                  ),
+                ),
+                onTap: () async {
+                  await _pickColor(
+                    context,
+                    '选择对方消息颜色',
+                    colors.otherMessageBubble,
+                    (color) async {
+                      final newColors = colors.copyWith(
+                        otherMessageBubble: color,
+                      );
+                      await newColors.save();
+                      await _loadColors();
+                    },
+                  );
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.info),
+                title: const Text('系统消息/公告颜色'),
+                trailing: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: colors.systemMessage,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.grey),
+                  ),
+                ),
+                onTap: () async {
+                  await _pickColor(context, '选择系统消息颜色', colors.systemMessage, (
+                    color,
+                  ) async {
+                    final newColors = colors.copyWith(systemMessage: color);
+                    await newColors.save();
+                    await _loadColors();
+                  });
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.block),
+                title: const Text('封禁提醒颜色'),
+                trailing: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: colors.banNotification,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.grey),
+                  ),
+                ),
+                onTap: () async {
+                  await _pickColor(
+                    context,
+                    '选择封禁提醒颜色',
+                    colors.banNotification,
+                    (color) async {
+                      final newColors = colors.copyWith(banNotification: color);
+                      await newColors.save();
+                      await _loadColors();
+                    },
+                  );
+                },
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 16),
