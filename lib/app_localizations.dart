@@ -18,7 +18,7 @@ class AppLocalizations {
     'settings': {'zh': '设置', 'en': 'Settings'},
     'version': {'zh': '版本', 'en': 'Version'},
     'ok': {'zh': '确定', 'en': 'OK'},
-    
+
     // 连接界面
     'server_ip': {'zh': '服务器IP', 'en': 'Server IP'},
     'port': {'zh': '端口', 'en': 'Port'},
@@ -26,13 +26,13 @@ class AppLocalizations {
     'connect': {'zh': '连接', 'en': 'Connect'},
     'fill_all_fields': {'zh': '请填写所有字段', 'en': 'Fill all fields'},
     'connection_failed': {'zh': '连接失败', 'en': 'Connection failed'},
-    
+
     // 设置界面
     'theme': {'zh': '主题', 'en': 'Theme'},
     'theme_dark': {'zh': '深色', 'en': 'Dark'},
     'theme_light': {'zh': '浅色', 'en': 'Light'},
     'language': {'zh': '语言', 'en': 'Language'},
-    
+
     // 聊天界面
     'chat': {'zh': '聊天', 'en': 'Chat'},
     'type_message': {'zh': '输入消息...', 'en': 'Type message...'},
@@ -61,19 +61,19 @@ class AppLocalizations {
   String get settings => translate('settings');
   String get version => translate('version');
   String get ok => translate('ok');
-  
+
   String get serverIp => translate('server_ip');
   String get port => translate('port');
   String get username => translate('username');
   String get connect => translate('connect');
   String get fillAllFields => translate('fill_all_fields');
   String get connectionFailed => translate('connection_failed');
-  
+
   String get theme => translate('theme');
   String get themeDark => translate('theme_dark');
   String get themeLight => translate('theme_light');
   String get language => translate('language');
-  
+
   String get chat => translate('chat');
   String get typeMessage => translate('type_message');
   String get send => translate('send');

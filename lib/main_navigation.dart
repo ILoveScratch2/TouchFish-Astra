@@ -58,16 +58,16 @@ class _MainNavigationState extends State<MainNavigation> {
   Widget _buildContent() {
     return switch (_currentIndex) {
       0 => ChatScreen(
-          socket: widget.socket, 
-          username: widget.username,
-          messages: _messages,
-        ),
+        socket: widget.socket,
+        username: widget.username,
+        messages: _messages,
+      ),
       1 => SettingsScreen(
-          currentTheme: widget.currentTheme,
-          currentLocale: widget.currentLocale,
-          onThemeToggle: widget.onThemeToggle,
-          onLanguageChange: widget.onLanguageChange,
-        ),
+        currentTheme: widget.currentTheme,
+        currentLocale: widget.currentLocale,
+        onThemeToggle: widget.onThemeToggle,
+        onLanguageChange: widget.onLanguageChange,
+      ),
       _ => const SizedBox(),
     };
   }
@@ -148,7 +148,7 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    
+
     if (_isDesktop) {
       return Scaffold(
         body: Row(
@@ -164,7 +164,9 @@ class _MainNavigationState extends State<MainNavigation> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _currentIndex == 0 ? '${l10n.chat} - ${widget.username}' : l10n.settings,
+          _currentIndex == 0
+              ? '${l10n.chat} - ${widget.username}'
+              : l10n.settings,
         ),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),

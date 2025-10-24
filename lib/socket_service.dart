@@ -48,7 +48,11 @@ class SocketService {
 
   void sendFile(String filename, Uint8List bytes) {
     if (_socket == null) return;
-    final start = jsonEncode({'type': '[FILE_START]', 'name': filename, 'size': bytes.length});
+    final start = jsonEncode({
+      'type': '[FILE_START]',
+      'name': filename,
+      'size': bytes.length,
+    });
     _socket!.write('$start\n');
 
     for (var i = 0; i < bytes.length; i += 8192) {

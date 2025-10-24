@@ -10,8 +10,8 @@ class ChatScreen extends StatefulWidget {
   final List<String> messages;
 
   const ChatScreen({
-    super.key, 
-    required this.socket, 
+    super.key,
+    required this.socket,
     required this.username,
     required this.messages,
   });
@@ -63,7 +63,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    
+
     return Column(
       children: [
         Expanded(

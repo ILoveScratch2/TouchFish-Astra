@@ -39,28 +39,28 @@ class _TouchFishAstraState extends State<TouchFishAstra> {
     final prefs = await SharedPreferences.getInstance();
     final theme = prefs.getString('theme_mode') ?? 'system';
     final lang = prefs.getString('language') ?? 'en';
-    
+
     setState(() {
-      _themeMode = theme == 'dark' 
-          ? ThemeMode.dark 
-          : theme == 'light' 
-              ? ThemeMode.light 
-              : ThemeMode.system;
+      _themeMode = theme == 'dark'
+          ? ThemeMode.dark
+          : theme == 'light'
+          ? ThemeMode.light
+          : ThemeMode.system;
       _locale = Locale(lang);
     });
   }
 
   Future<void> _toggleTheme() async {
-    final newMode = _themeMode == ThemeMode.light 
-        ? ThemeMode.dark 
+    final newMode = _themeMode == ThemeMode.light
+        ? ThemeMode.dark
         : ThemeMode.light;
-    
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
-      'theme_mode', 
+      'theme_mode',
       newMode == ThemeMode.dark ? 'dark' : 'light',
     );
-    
+
     setState(() {
       _themeMode = newMode;
     });
@@ -69,7 +69,7 @@ class _TouchFishAstraState extends State<TouchFishAstra> {
   Future<void> _changeLanguage(String langCode) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language', langCode);
-    
+
     setState(() {
       _locale = Locale(langCode);
     });
@@ -87,10 +87,7 @@ class _TouchFishAstraState extends State<TouchFishAstra> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('zh'),
-        Locale('en'),
-      ],
+      supportedLocales: const [Locale('zh'), Locale('en')],
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
@@ -182,20 +179,16 @@ class _ConnectScreenState extends State<ConnectScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppConstants.appName),
-      ),
+      appBar: AppBar(title: const Text(AppConstants.appName)),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => Scaffold(
-                appBar: AppBar(
-                  title: Text(l10n.settings),
-                ),
+                appBar: AppBar(title: Text(l10n.settings)),
                 body: SettingsScreen(
                   currentTheme: widget.currentTheme,
                   currentLocale: widget.currentLocale,
@@ -224,7 +217,9 @@ class _ConnectScreenState extends State<ConnectScreen> {
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Text('${l10n.version} ${AppConstants.version} by ${AppConstants.author}'),
+                  Text(
+                    '${l10n.version} ${AppConstants.version} by ${AppConstants.author}',
+                  ),
                   const SizedBox(height: 32),
                   TextField(
                     controller: _ipController,

@@ -20,7 +20,7 @@ class SettingsScreen extends StatelessWidget {
   void _showAboutDialog(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final isZh = Localizations.localeOf(context).languageCode == 'zh';
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -81,7 +81,7 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -118,14 +118,8 @@ class SettingsScreen extends StatelessWidget {
             trailing: DropdownButton<String>(
               value: currentLocale.languageCode,
               items: const [
-                DropdownMenuItem(
-                  value: 'zh',
-                  child: Text('简体中文'),
-                ),
-                DropdownMenuItem(
-                  value: 'en',
-                  child: Text('English'),
-                ),
+                DropdownMenuItem(value: 'zh', child: Text('简体中文')),
+                DropdownMenuItem(value: 'en', child: Text('English')),
               ],
               onChanged: (value) {
                 if (value != null) {
