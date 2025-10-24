@@ -7,27 +7,35 @@ import 'app_localizations.dart';
 class ChatScreen extends StatefulWidget {
   final SocketService socket;
   final String username;
+  final List<String> messages;
 
-  const ChatScreen({super.key, required this.socket, required this.username});
+  const ChatScreen({
+    super.key, 
+    required this.socket, 
+    required this.username,
+    required this.messages,
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final _messages = <String>[];
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
-  StreamSubscription<String>? _subscription;
 
   @override
   void initState() {
     super.initState();
-    _subscription = widget.socket.messages.listen((msg) {
-      if (!mounted) return;
-      setState(() => _messages.add(msg));
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollDown());
+  }
+
+  @override
+  void didUpdateWidget(ChatScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.messages.length != oldWidget.messages.length) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollDown());
-    });
+    }
   }
 
   void _scrollDown() {
@@ -62,10 +70,10 @@ class _ChatScreenState extends State<ChatScreen> {
           child: ListView.builder(
             controller: _scrollController,
             padding: const EdgeInsets.all(8),
-            itemCount: _messages.length,
+            itemCount: widget.messages.length,
             itemBuilder: (_, i) => Padding(
               padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Text(_messages[i]),
+              child: Text(widget.messages[i]),
             ),
           ),
         ),
@@ -105,7 +113,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
-    _subscription?.cancel();
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();

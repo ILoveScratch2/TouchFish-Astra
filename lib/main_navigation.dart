@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
@@ -31,6 +32,23 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   var _currentIndex = 0;
+  final _messages = <String>[];
+  StreamSubscription<String>? _subscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscription = widget.socket.messages.listen((msg) {
+      if (!mounted) return;
+      setState(() => _messages.add(msg));
+    });
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
+  }
 
   bool get _isDesktop {
     if (kIsWeb) return false;
@@ -39,7 +57,11 @@ class _MainNavigationState extends State<MainNavigation> {
 
   Widget _buildContent() {
     return switch (_currentIndex) {
-      0 => ChatScreen(socket: widget.socket, username: widget.username),
+      0 => ChatScreen(
+          socket: widget.socket, 
+          username: widget.username,
+          messages: _messages,
+        ),
       1 => SettingsScreen(
           currentTheme: widget.currentTheme,
           currentLocale: widget.currentLocale,
