@@ -15,13 +15,11 @@ enum ChatViewMode { list, bubble }
 class ChatScreen extends StatefulWidget {
   final SocketService socket;
   final String username;
-  final List<SocketMessage> messages;
 
   const ChatScreen({
     super.key,
     required this.socket,
     required this.username,
-    required this.messages,
   });
 
   @override
@@ -31,6 +29,8 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
+  final _messages = <SocketMessage>[];
+  StreamSubscription<SocketMessage>? _subscription;
   ChatViewMode _viewMode = ChatViewMode.bubble;
   ChatColors? _colors;
   bool _markdownEnabled = true;
@@ -40,6 +40,13 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _loadSettings();
+    _subscription = widget.socket.messages.listen((msg) {
+      if (!mounted) return;
+      setState(() {
+        _messages.add(msg);
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollDown());
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollDown());
   }
 
@@ -66,11 +73,11 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   @override
-  void didUpdateWidget(ChatScreen oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.messages.length != oldWidget.messages.length) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollDown());
-    }
+  void dispose() {
+    _subscription?.cancel();
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -226,7 +233,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colors = _colors ?? (isDark ? ChatColors.dark() : ChatColors.light());
-    final chatMessages = widget.messages
+    final chatMessages = _messages
         .map((msg) => ChatMessage.fromSocketMessage(msg, widget.username))
         .toList();
 
@@ -466,12 +473,5 @@ class _ChatScreenState extends State<ChatScreen> {
         );
       },
     );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _scrollController.dispose();
-    super.dispose();
   }
 }

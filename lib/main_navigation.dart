@@ -1,12 +1,14 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
 import 'chat_screen.dart';
+import 'admin_screen.dart';
 import 'settings_screen.dart';
 import 'socket_service.dart';
 import 'app_localizations.dart';
 import 'constants.dart';
+
+enum NavigationTab { chat, admin, settings }
 
 class MainNavigation extends StatefulWidget {
   final SocketService socket;
@@ -31,22 +33,32 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  var _currentIndex = 0;
-  final _messages = <SocketMessage>[];
-  StreamSubscription<SocketMessage>? _subscription;
+  var _currentTab = NavigationTab.chat;
+  late final AdminScreen _adminScreen;
+  late final ChatScreen _chatScreen;
+  late final SettingsScreen _settingsScreen;
 
   @override
   void initState() {
     super.initState();
-    _subscription = widget.socket.messages.listen((msg) {
-      if (!mounted) return;
-      setState(() => _messages.add(msg));
-    });
+    
+    _chatScreen = ChatScreen(
+      socket: widget.socket,
+      username: widget.username,
+    );
+    
+    _adminScreen = AdminScreen(socket: widget.socket);
+    
+    _settingsScreen = SettingsScreen(
+      currentTheme: widget.currentTheme,
+      currentLocale: widget.currentLocale,
+      onThemeToggle: widget.onThemeToggle,
+      onLanguageChange: widget.onLanguageChange,
+    );
   }
 
   @override
   void dispose() {
-    _subscription?.cancel();
     super.dispose();
   }
 
@@ -56,28 +68,62 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   Widget _buildContent() {
-    return switch (_currentIndex) {
-      0 => ChatScreen(
-        socket: widget.socket,
-        username: widget.username,
-        messages: _messages,
-      ),
-      1 => SettingsScreen(
-        currentTheme: widget.currentTheme,
-        currentLocale: widget.currentLocale,
-        onThemeToggle: widget.onThemeToggle,
-        onLanguageChange: widget.onLanguageChange,
-      ),
-      _ => const SizedBox(),
-    };
+    return IndexedStack(
+      index: _currentTab.index,
+      children: [
+        _chatScreen,
+        _adminScreen,
+        _settingsScreen,
+      ],
+    );
   }
 
   Widget _buildNavigationRail() {
     final l10n = AppLocalizations.of(context);
+    final mainTabs = [NavigationTab.chat, NavigationTab.admin];
+    final selectedMainIndex = mainTabs.contains(_currentTab) 
+        ? mainTabs.indexOf(_currentTab) 
+        : 0;
+    
     return NavigationRail(
-      selectedIndex: _currentIndex,
-      onDestinationSelected: (i) => setState(() => _currentIndex = i),
+      selectedIndex: selectedMainIndex,
+      onDestinationSelected: (i) => setState(() => _currentTab = mainTabs[i]),
       labelType: NavigationRailLabelType.all,
+      trailing: Expanded(
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Divider(),
+                const SizedBox(height: 8),
+                IconButton(
+                  icon: Icon(
+                    _currentTab == NavigationTab.settings
+                        ? Icons.settings
+                        : Icons.settings_outlined,
+                    size: 24,
+                  ),
+                  onPressed: () => setState(() => _currentTab = NavigationTab.settings),
+                  tooltip: l10n.settings,
+                  isSelected: _currentTab == NavigationTab.settings,
+                ),
+                Text(
+                  l10n.settings,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: _currentTab == NavigationTab.settings
+                        ? Theme.of(context).colorScheme.primary
+                        : null,
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        ),
+      ),
       destinations: [
         NavigationRailDestination(
           icon: const Icon(Icons.chat_outlined),
@@ -85,9 +131,9 @@ class _MainNavigationState extends State<MainNavigation> {
           label: Text(l10n.chat),
         ),
         NavigationRailDestination(
-          icon: const Icon(Icons.settings_outlined),
-          selectedIcon: const Icon(Icons.settings),
-          label: Text(l10n.settings),
+          icon: const Icon(Icons.admin_panel_settings_outlined),
+          selectedIcon: const Icon(Icons.admin_panel_settings),
+          label: Text(l10n.admin),
         ),
       ],
     );
@@ -96,47 +142,60 @@ class _MainNavigationState extends State<MainNavigation> {
   Drawer _buildDrawer() {
     final l10n = AppLocalizations.of(context);
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
+      child: Column(
         children: [
           DrawerHeader(
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.primaryContainer,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                const Text(
-                  AppConstants.appName,
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  widget.username,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+            child: SizedBox(
+              width: double.infinity,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const Text(
+                    AppConstants.appName,
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.username,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           ListTile(
             leading: const Icon(Icons.chat),
             title: Text(l10n.chat),
-            selected: _currentIndex == 0,
+            selected: _currentTab == NavigationTab.chat,
             onTap: () {
-              setState(() => _currentIndex = 0);
+              setState(() => _currentTab = NavigationTab.chat);
               Navigator.pop(context);
             },
           ),
           ListTile(
+            leading: const Icon(Icons.admin_panel_settings),
+            title: Text(l10n.admin),
+            selected: _currentTab == NavigationTab.admin,
+            onTap: () {
+              setState(() => _currentTab = NavigationTab.admin);
+              Navigator.pop(context);
+            },
+          ),
+          const Spacer(),
+          const Divider(),
+          ListTile(
             leading: const Icon(Icons.settings),
             title: Text(l10n.settings),
-            selected: _currentIndex == 1,
+            selected: _currentTab == NavigationTab.settings,
             onTap: () {
-              setState(() => _currentIndex = 1);
+              setState(() => _currentTab = NavigationTab.settings);
               Navigator.pop(context);
             },
           ),
@@ -164,9 +223,11 @@ class _MainNavigationState extends State<MainNavigation> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _currentIndex == 0
-              ? '${l10n.chat} - ${widget.username}'
-              : l10n.settings,
+          switch (_currentTab) {
+            NavigationTab.chat => '${l10n.chat} - ${widget.username}',
+            NavigationTab.admin => l10n.admin,
+            NavigationTab.settings => l10n.settings,
+          },
         ),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),

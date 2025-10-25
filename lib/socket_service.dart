@@ -28,6 +28,7 @@ class SocketService {
   Socket? _socket;
   final _messageController = StreamController<SocketMessage>.broadcast();
   final _buffer = <int>[];
+  Map<String, dynamic>? serverInfo;
 
   _FileTransferState _fileState = _FileTransferState.none;
   String? _currentFilename;
@@ -120,6 +121,7 @@ class SocketService {
     try {
       _socket = await Socket.connect(ip, port);
       _socket!.write('用户 $username 加入聊天室。\n');
+      serverInfo = {'ip': ip, 'port': port, 'username': username};
       _listen();
       return true;
     } catch (e) {
@@ -189,6 +191,12 @@ class SocketService {
   void send(String username, String message) {
     if (_socket == null) return;
     _socket!.write('$username: $message\n');
+  }
+
+  void sendAdmin(String type, String message) {
+    if (_socket == null) return;
+    final json = jsonEncode({'type': type, 'message': message});
+    _socket!.write('$json\n');
   }
 
   void sendFile(String filename, Uint8List bytes) {

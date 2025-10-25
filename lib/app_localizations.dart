@@ -13,6 +13,7 @@ class AppLocalizations {
   static final Map<String, Map<String, String>> _localizedValues = {
     // App通用
     'settings': {'zh': '设置', 'en': 'Settings'},
+    'admin': {'zh': '管理员', 'en': 'Admin'},
     'version': {'zh': '版本', 'en': 'Version'},
     'ok': {'zh': '确定', 'en': 'OK'},
 
@@ -83,6 +84,44 @@ class AppLocalizations {
     'markdown_hint': {'zh': '启用后将渲染消息中的Markdown和LaTeX公式', 'en': 'Render Markdown and LaTeX formulas in messages'},
     'enter_to_send': {'zh': 'Enter键发送消息', 'en': 'Enter to Send'},
     'enter_to_send_hint': {'zh': '开启时按Enter发送(单行输入);关闭时支持多行输入', 'en': 'When enabled, press Enter to send (single line); when disabled, multiline input'},
+
+    // 管理员功能
+    'admin_broadcast': {'zh': '广播消息', 'en': 'Broadcast Message'},
+    'admin_broadcast_hint': {'zh': '输入要广播的消息内容', 'en': 'Enter message to broadcast'},
+    'admin_ban': {'zh': '封禁用户', 'en': 'Ban User'},
+    'admin_ban_hint': {'zh': '输入要封禁的用户名', 'en': 'Enter username to ban'},
+    'admin_enable': {'zh': '解封用户', 'en': 'Unban User'},
+    'admin_enable_hint': {'zh': '输入要解封的用户名', 'en': 'Enter username to unban'},
+    'admin_set': {'zh': '设置配置', 'en': 'Set Configuration'},
+    'admin_set_hint': {'zh': '输入配置项和值 (格式: key value)', 'en': 'Enter config key and value (format: key value)'},
+    'admin_accept': {'zh': '接受加入请求', 'en': 'Accept Join Request'},
+    'admin_accept_hint': {'zh': '输入要接受的用户名', 'en': 'Enter username to accept'},
+    'admin_reject': {'zh': '拒绝加入请求', 'en': 'Reject Join Request'},
+    'admin_reject_hint': {'zh': '输入要拒绝的用户名', 'en': 'Enter username to reject'},
+    'admin_search': {'zh': '搜索用户', 'en': 'Search User'},
+    'admin_search_hint': {'zh': '输入要搜索的用户名', 'en': 'Enter username to search'},
+    'admin_req': {'zh': '查看加入请求', 'en': 'View Join Requests'},
+    'admin_req_hint': {'zh': '查看所有待处理的加入请求', 'en': 'View all pending join requests'},
+    'admin_execute': {'zh': '执行', 'en': 'Execute'},
+    'admin_results': {'zh': '执行结果', 'en': 'Results'},
+    'admin_clear': {'zh': '清空', 'en': 'Clear'},
+    'admin_connect_title': {'zh': '连接管理员控制台', 'en': 'Connect to Admin Console'},
+    'admin_connect_hint': {'zh': '请输入服务器管理员端口\n服务端执行 "admin on" 后会显示', 'en': 'Enter admin port\nShown after server executes "admin on"'},
+    'admin_port': {'zh': '管理员端口', 'en': 'Admin Port'},
+    'admin_connect_button': {'zh': '连接管理员控制台', 'en': 'Connect to Admin'},
+    'admin_connecting': {'zh': '连接中...', 'en': 'Connecting...'},
+    'admin_connected': {'zh': '管理员连接成功', 'en': 'Admin connected'},
+    'admin_connect_failed': {'zh': '连接失败：无权限或端口错误', 'en': 'Connection failed: unauthorized or invalid port'},
+    'admin_unauthorized': {'zh': '无管理员权限或端口错误\n请检查：1. 服务端是否执行了 "admin on"\n2. 端口号是否正确\n3. 您的IP是否在管理员列表', 'en': 'Unauthorized or invalid port\nCheck: 1. Server executed "admin on"\n2. Port number is correct\n3. Your IP is in admin list'},
+    'admin_status_connected': {'zh': '已连接到管理员控制台', 'en': 'Connected to Admin Console'},
+    'admin_disconnect': {'zh': '断开', 'en': 'Disconnect'},
+    'admin_removed': {'zh': '您已被移除管理员列表', 'en': 'You have been removed from admin list'},
+    'admin_server_closed': {'zh': '服务器已关闭', 'en': 'Server closed'},
+    'admin_invalid_port': {'zh': '无效的端口号', 'en': 'Invalid port number'},
+    'admin_search_type': {'zh': '搜索类型', 'en': 'Search Type'},
+    'admin_search_param_hint': {'zh': '输入搜索参数（用户名/IP）', 'en': 'Enter search parameter (username/IP)'},
+    'admin_search_times_hint': {'zh': '输入最小发送次数', 'en': 'Enter minimum send times'},
+    'admin_set_option': {'zh': '配置选项', 'en': 'Configuration Option'},
   };
 
   String translate(String key, [List<String> args = const []]) {
@@ -103,6 +142,7 @@ class AppLocalizations {
 
   // 便捷访问器
   String get settings => translate('settings');
+  String get admin => translate('admin');
   String get version => translate('version');
   String get ok => translate('ok');
 
