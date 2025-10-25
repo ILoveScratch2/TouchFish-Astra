@@ -33,6 +33,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _autoSaveFiles = true;
   String _downloadPath = '';
   bool _markdownRendering = true;
+  bool _enterToSend = true;
 
   @override
   void initState() {
@@ -62,6 +63,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _autoSaveFiles = prefs.getBool('auto_save_files') ?? true;
       _downloadPath = prefs.getString('download_path') ?? defaultPath;
       _markdownRendering = prefs.getBool('markdown_rendering') ?? true;
+      _enterToSend = prefs.getBool('enter_to_send') ?? true;
     });
   }
 
@@ -357,6 +359,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   await prefs.setBool('markdown_rendering', value);
                   setState(() {
                     _markdownRendering = value;
+                  });
+                },
+              ),
+              const Divider(height: 1),
+              SwitchListTile(
+                secondary: const Icon(Icons.keyboard_return),
+                title: Text(l10n.enterToSend),
+                subtitle: Text(l10n.enterToSendHint),
+                value: _enterToSend,
+                onChanged: (value) async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('enter_to_send', value);
+                  setState(() {
+                    _enterToSend = value;
                   });
                 },
               ),

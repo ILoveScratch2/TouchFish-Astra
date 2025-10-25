@@ -81,6 +81,8 @@ class AppLocalizations {
     'pick_ban_color': {'zh': '选择封禁提醒颜色', 'en': 'Pick Ban Notification Color'},
     'markdown_rendering': {'zh': 'Markdown/LaTeX渲染', 'en': 'Markdown/LaTeX Rendering'},
     'markdown_hint': {'zh': '启用后将渲染消息中的Markdown和LaTeX公式', 'en': 'Render Markdown and LaTeX formulas in messages'},
+    'enter_to_send': {'zh': 'Enter键发送消息', 'en': 'Enter to Send'},
+    'enter_to_send_hint': {'zh': '开启时按Enter发送(单行输入);关闭时支持多行输入', 'en': 'When enabled, press Enter to send (single line); when disabled, multiline input'},
   };
 
   String translate(String key, [List<String> args = const []]) {
@@ -166,6 +168,8 @@ class AppLocalizations {
   String get pickBanColor => translate('pick_ban_color');
   String get markdownRendering => translate('markdown_rendering');
   String get markdownHint => translate('markdown_hint');
+  String get enterToSend => translate('enter_to_send');
+  String get enterToSendHint => translate('enter_to_send_hint');
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

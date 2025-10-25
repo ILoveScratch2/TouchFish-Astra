@@ -34,6 +34,7 @@ class _ChatScreenState extends State<ChatScreen> {
   ChatViewMode _viewMode = ChatViewMode.bubble;
   ChatColors? _colors;
   bool _markdownEnabled = true;
+  bool _enterToSend = true;
 
   @override
   void initState() {
@@ -49,10 +50,12 @@ class _ChatScreenState extends State<ChatScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final modeIndex = prefs.getInt('chat_view_mode') ?? 1;
     final markdownEnabled = prefs.getBool('markdown_rendering') ?? true;
+    final enterToSend = prefs.getBool('enter_to_send') ?? true;
     if (!mounted) return;
     setState(() {
       _viewMode = ChatViewMode.values[modeIndex];
       _markdownEnabled = markdownEnabled;
+      _enterToSend = enterToSend;
     });
 
     final colors = await ChatColors.load(isDark);
@@ -202,7 +205,10 @@ class _ChatScreenState extends State<ChatScreen> {
   void _send() {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
-    widget.socket.send(widget.username, text);
+    text.split('\n')
+        .where((line) => line.trim().isNotEmpty)
+        .forEach((line) => widget.socket.send(widget.username, line.trim()));
+    
     _controller.clear();
   }
 
@@ -243,8 +249,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     hintText: l10n.typeMessage,
                     border: const OutlineInputBorder(),
                   ),
-                  maxLines: null,
-                  onSubmitted: (_) => _send(),
+                  maxLines: _enterToSend ? 1 : null,
+                  onSubmitted: _enterToSend ? (_) => _send() : null,
                 ),
               ),
               const SizedBox(width: 8),
