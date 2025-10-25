@@ -79,6 +79,8 @@ class AppLocalizations {
     'pick_other_color': {'zh': '选择对方消息颜色', 'en': 'Pick Other Message Color'},
     'pick_system_color': {'zh': '选择系统消息颜色', 'en': 'Pick System Message Color'},
     'pick_ban_color': {'zh': '选择封禁提醒颜色', 'en': 'Pick Ban Notification Color'},
+    'markdown_rendering': {'zh': 'Markdown/LaTeX渲染', 'en': 'Markdown/LaTeX Rendering'},
+    'markdown_hint': {'zh': '启用后将渲染消息中的Markdown和LaTeX公式', 'en': 'Render Markdown and LaTeX formulas in messages'},
   };
 
   String translate(String key, [List<String> args = const []]) {
@@ -162,6 +164,8 @@ class AppLocalizations {
   String get pickOtherColor => translate('pick_other_color');
   String get pickSystemColor => translate('pick_system_color');
   String get pickBanColor => translate('pick_ban_color');
+  String get markdownRendering => translate('markdown_rendering');
+  String get markdownHint => translate('markdown_hint');
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

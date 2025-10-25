@@ -8,6 +8,7 @@ import 'socket_service.dart';
 import 'app_localizations.dart';
 import 'models/chat_message.dart';
 import 'models/chat_colors.dart';
+import 'widgets/message_content.dart';
 
 enum ChatViewMode { list, bubble }
 
@@ -32,6 +33,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final _scrollController = ScrollController();
   ChatViewMode _viewMode = ChatViewMode.bubble;
   ChatColors? _colors;
+  bool _markdownEnabled = true;
 
   @override
   void initState() {
@@ -46,9 +48,11 @@ class _ChatScreenState extends State<ChatScreen> {
     final prefs = await SharedPreferences.getInstance();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final modeIndex = prefs.getInt('chat_view_mode') ?? 1;
+    final markdownEnabled = prefs.getBool('markdown_rendering') ?? true;
     if (!mounted) return;
     setState(() {
       _viewMode = ChatViewMode.values[modeIndex];
+      _markdownEnabled = markdownEnabled;
     });
 
     final colors = await ChatColors.load(isDark);
@@ -369,9 +373,10 @@ class _ChatScreenState extends State<ChatScreen> {
                         : colors.otherMessageBubble,
                     borderRadius: BorderRadius.circular(18),
                   ),
-                  child: Text(
-                    _translateMessage(msg, l10n),
-                    style: Theme.of(context).textTheme.bodyMedium,
+                  child: MessageContent(
+                    text: _translateMessage(msg, l10n),
+                    enableMarkdown: _markdownEnabled,
+                    textStyle: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
               ],
@@ -435,13 +440,14 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                 Expanded(
-                  child: Text(
-                    msg.content.isNotEmpty
+                  child: MessageContent(
+                    text: msg.content.isNotEmpty
                         ? (msg.type == MessageType.userMessage
                               ? '${msg.sender}: ${_translateMessage(msg, l10n)}'
                               : _translateMessage(msg, l10n))
                         : '',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    enableMarkdown: _markdownEnabled,
+                    textStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: isClickable
                           ? Theme.of(context).colorScheme.primary
                           : null,

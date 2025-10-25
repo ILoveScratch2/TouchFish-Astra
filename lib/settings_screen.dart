@@ -32,6 +32,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   ChatViewMode _viewMode = ChatViewMode.bubble;
   bool _autoSaveFiles = true;
   String _downloadPath = '';
+  bool _markdownRendering = true;
 
   @override
   void initState() {
@@ -60,6 +61,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _viewMode = ChatViewMode.values[prefs.getInt('chat_view_mode') ?? 1];
       _autoSaveFiles = prefs.getBool('auto_save_files') ?? true;
       _downloadPath = prefs.getString('download_path') ?? defaultPath;
+      _markdownRendering = prefs.getBool('markdown_rendering') ?? true;
     });
   }
 
@@ -341,6 +343,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   await prefs.setBool('auto_save_files', value);
                   setState(() {
                     _autoSaveFiles = value;
+                  });
+                },
+              ),
+              const Divider(height: 1),
+              SwitchListTile(
+                secondary: const Icon(Icons.text_format),
+                title: Text(l10n.markdownRendering),
+                subtitle: Text(l10n.markdownHint),
+                value: _markdownRendering,
+                onChanged: (value) async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('markdown_rendering', value);
+                  setState(() {
+                    _markdownRendering = value;
                   });
                 },
               ),
