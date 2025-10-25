@@ -8,9 +8,25 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 enum _FileTransferState { none, receiving }
 
+class SocketMessage {
+  final String type; // 'text', 'file_status', 'user_join'
+  final String content;
+  final Map<String, dynamic>? metadata;
+
+  SocketMessage(this.type, this.content, [this.metadata]);
+
+  factory SocketMessage.text(String text) => SocketMessage('text', text);
+  
+  factory SocketMessage.userJoin(String username) =>
+      SocketMessage('user_join', username);
+  
+  factory SocketMessage.fileStatus(String statusKey, [List<String>? args]) =>
+      SocketMessage('file_status', statusKey, {'args': args ?? []});
+}
+
 class SocketService {
   Socket? _socket;
-  final _messageController = StreamController<String>.broadcast();
+  final _messageController = StreamController<SocketMessage>.broadcast();
   final _buffer = <int>[];
 
   _FileTransferState _fileState = _FileTransferState.none;
@@ -18,7 +34,7 @@ class SocketService {
   int? _currentFileSize;
   final List<String> _fileDataChunks = [];
 
-  Stream<String> get messages => _messageController.stream;
+  Stream<SocketMessage> get messages => _messageController.stream;
 
   Future<void> _saveReceivedFile(String filename, List<String> chunks) async {
     try {
@@ -26,7 +42,9 @@ class SocketService {
       final autoSave = prefs.getBool('auto_save_files') ?? true;
 
       if (!autoSave) {
-        _messageController.add('[文件传输] 文件接收完成: $filename (未自动保存)');
+        _messageController.add(
+          SocketMessage.fileStatus('file_received', [filename]),
+        );
         return;
       }
 
@@ -36,7 +54,7 @@ class SocketService {
       }
 
       if (_currentFileSize != null && bytes.length != _currentFileSize) {
-        _messageController.add('[文件传输] 警告: 文件大小不匹配');
+        _messageController.add(SocketMessage.fileStatus('file_size_mismatch'));
       }
 
       String? downloadPath = prefs.getString('download_path');
@@ -48,7 +66,9 @@ class SocketService {
           try {
             directory.createSync(recursive: true);
           } catch (e) {
-            _messageController.add('[文件传输] 无法创建下载目录: $e');
+            _messageController.add(
+              SocketMessage.fileStatus('cannot_create_dir', ['$e']),
+            );
             downloadPath = null;
           }
         }
@@ -63,7 +83,7 @@ class SocketService {
       }
 
       if (directory == null) {
-        _messageController.add('[文件传输] 无法获取下载目录');
+        _messageController.add(SocketMessage.fileStatus('cannot_get_dir'));
         return;
       }
 
@@ -86,9 +106,13 @@ class SocketService {
       final file = File(filePath);
       await file.writeAsBytes(bytes);
 
-      _messageController.add('[文件传输] 文件已保存: ${file.path}');
+      _messageController.add(
+        SocketMessage.fileStatus('file_saved', [file.path]),
+      );
     } catch (e) {
-      _messageController.add('[文件传输] 保存失败: $e');
+      _messageController.add(
+        SocketMessage.fileStatus('file_save_failed', ['$e']),
+      );
     }
   }
 
@@ -132,7 +156,9 @@ class SocketService {
             _currentFileSize = json['size'] as int?;
             _fileDataChunks.clear();
             final filename = _currentFilename ?? 'unknown';
-            _messageController.add('[文件传输] 正在接收文件: $filename');
+            _messageController.add(
+              SocketMessage.fileStatus('receiving_file', [filename]),
+            );
             continue;
           } else if (type == '[FILE_DATA]' &&
               _fileState == _FileTransferState.receiving) {
@@ -156,7 +182,7 @@ class SocketService {
         } catch (_) {}
       }
 
-      _messageController.add(line);
+      _messageController.add(SocketMessage.text(line));
     }
   }
 

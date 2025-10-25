@@ -14,7 +14,7 @@ enum ChatViewMode { list, bubble }
 class ChatScreen extends StatefulWidget {
   final SocketService socket;
   final String username;
-  final List<String> messages;
+  final List<SocketMessage> messages;
 
   const ChatScreen({
     super.key,
@@ -78,6 +78,38 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  String _translateMessage(ChatMessage msg, AppLocalizations l10n) {
+    // 文件传输状态消息
+    if (msg.type == MessageType.fileTransfer) {
+      switch (msg.content) {
+        case 'file_received':
+          return l10n.fileReceived(msg.args.isNotEmpty ? msg.args[0] : '');
+        case 'file_size_mismatch':
+          return l10n.fileSizeMismatch;
+        case 'cannot_create_dir':
+          return l10n.cannotCreateDir(msg.args.isNotEmpty ? msg.args[0] : '');
+        case 'cannot_get_dir':
+          return l10n.cannotGetDir;
+        case 'file_saved':
+          return l10n.fileSaved(msg.args.isNotEmpty ? msg.args[0] : '');
+        case 'file_save_failed':
+          return l10n.fileSaveFailed(msg.args.isNotEmpty ? msg.args[0] : '');
+        case 'receiving_file':
+          return l10n.receivingFile(msg.args.isNotEmpty ? msg.args[0] : '');
+        default:
+          return msg.content; // fallback
+      }
+    }
+
+    // 系统消息
+    if (msg.type == MessageType.systemMessage && msg.content == 'user_joined') {
+      return l10n.userJoined(msg.args.isNotEmpty ? msg.args[0] : '');
+    }
+    
+    return msg.content;
+  }
+
+
   Future<void> _openFilePath(String filePath) async {
     try {
       final file = File(filePath);
@@ -94,17 +126,18 @@ class _ChatScreenState extends State<ChatScreen> {
         await launchUrl(uri);
       } else if (Platform.isAndroid) {
         if (mounted) {
+          final l10n = AppLocalizations.of(context);
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
-              title: const Text('文件已保存'),
+              title: Text(l10n.fileSavedTitle),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '文件位置:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  Text(
+                    l10n.fileLocation,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   SelectableText(
@@ -112,16 +145,16 @@ class _ChatScreenState extends State<ChatScreen> {
                     style: const TextStyle(fontSize: 12),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    '提示: 您可以在文件管理器中找到此文件',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  Text(
+                    l10n.fileLocationHint,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('关闭'),
+                  child: Text(l10n.close),
                 ),
                 TextButton(
                   onPressed: () async {
@@ -134,18 +167,18 @@ class _ChatScreenState extends State<ChatScreen> {
                       );
                       if (!launched && mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('无法打开文件，请在文件管理器中查找')),
+                          SnackBar(content: Text(l10n.cannotOpenFile)),
                         );
                       }
                     } catch (e) {
                       if (mounted) {
                         ScaffoldMessenger.of(
                           context,
-                        ).showSnackBar(SnackBar(content: Text('打开失败: $e')));
+                        ).showSnackBar(SnackBar(content: Text(l10n.openFailed('$e'))));
                       }
                     }
                   },
-                  child: const Text('打开文件'),
+                  child: Text(l10n.openFile),
                 ),
               ],
             ),
@@ -154,9 +187,10 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('无法打开文件位置: $e')));
+        ).showSnackBar(SnackBar(content: Text(l10n.cannotOpenLocation('$e'))));
       }
     }
   }
@@ -183,15 +217,15 @@ class _ChatScreenState extends State<ChatScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colors = _colors ?? (isDark ? ChatColors.dark() : ChatColors.light());
     final chatMessages = widget.messages
-        .map((raw) => ChatMessage.parse(raw, widget.username))
+        .map((msg) => ChatMessage.fromSocketMessage(msg, widget.username))
         .toList();
 
     return Column(
       children: [
         Expanded(
           child: _viewMode == ChatViewMode.bubble
-              ? _buildBubbleView(chatMessages, colors)
-              : _buildListView(chatMessages, colors),
+              ? _buildBubbleView(chatMessages, colors, l10n)
+              : _buildListView(chatMessages, colors, l10n),
         ),
         const Divider(height: 1),
         Padding(
@@ -227,7 +261,11 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildBubbleView(List<ChatMessage> messages, ChatColors colors) {
+  Widget _buildBubbleView(
+    List<ChatMessage> messages,
+    ChatColors colors,
+    AppLocalizations l10n,
+  ) {
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.all(8),
@@ -276,7 +314,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                       Flexible(
                         child: Text(
-                          msg.content,
+                          _translateMessage(msg, l10n),
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: isClickable
@@ -332,7 +370,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     borderRadius: BorderRadius.circular(18),
                   ),
                   child: Text(
-                    msg.content,
+                    _translateMessage(msg, l10n),
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
@@ -344,7 +382,11 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildListView(List<ChatMessage> messages, ChatColors colors) {
+  Widget _buildListView(
+    List<ChatMessage> messages,
+    ChatColors colors,
+    AppLocalizations l10n,
+  ) {
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.all(8),
@@ -396,8 +438,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: Text(
                     msg.content.isNotEmpty
                         ? (msg.type == MessageType.userMessage
-                              ? '${msg.sender}: ${msg.content}'
-                              : msg.content)
+                              ? '${msg.sender}: ${_translateMessage(msg, l10n)}'
+                              : _translateMessage(msg, l10n))
                         : '',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: isClickable

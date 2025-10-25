@@ -96,6 +96,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Color currentColor,
     Function(Color) onColorChanged,
   ) async {
+    final l10n = AppLocalizations.of(context);
     Color? selectedColor;
 
     await showDialog(
@@ -139,7 +140,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
         ],
       ),
@@ -289,7 +290,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 24),
         Text(
-          '聊天设置',
+          l10n.chatSettings,
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
@@ -298,21 +299,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               ListTile(
                 leading: const Icon(Icons.view_module),
-                title: const Text('聊天界面模式'),
+                title: Text(l10n.chatViewMode),
                 subtitle: Text(
-                  _viewMode == ChatViewMode.bubble ? '气泡模式' : '列表模式',
+                  _viewMode == ChatViewMode.bubble ? l10n.bubbleMode : l10n.listMode,
                 ),
                 trailing: SegmentedButton<ChatViewMode>(
-                  segments: const [
+                  segments: [
                     ButtonSegment(
                       value: ChatViewMode.bubble,
-                      icon: Icon(Icons.chat_bubble_outline, size: 16),
-                      label: Text('气泡'),
+                      icon: const Icon(Icons.chat_bubble_outline, size: 16),
+                      label: Text(l10n.bubble),
                     ),
                     ButtonSegment(
                       value: ChatViewMode.list,
-                      icon: Icon(Icons.list, size: 16),
-                      label: Text('列表'),
+                      icon: const Icon(Icons.list, size: 16),
+                      label: Text(l10n.list),
                     ),
                   ],
                   selected: {_viewMode},
@@ -332,8 +333,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const Divider(height: 1),
               SwitchListTile(
                 secondary: const Icon(Icons.save_alt),
-                title: const Text('自动保存接收的文件'),
-                subtitle: const Text('文件将保存到指定文件夹'),
+                title: Text(l10n.autoSaveFiles),
+                subtitle: Text(l10n.autoSaveHint),
                 value: _autoSaveFiles,
                 onChanged: (value) async {
                   final prefs = await SharedPreferences.getInstance();
@@ -346,9 +347,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.folder),
-                title: const Text('下载保存路径'),
+                title: Text(l10n.downloadPath),
                 subtitle: Text(
-                  _downloadPath.isEmpty ? '使用默认下载文件夹' : _downloadPath,
+                  _downloadPath.isEmpty ? l10n.defaultFolder : _downloadPath,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -358,7 +359,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     if (_downloadPath.isNotEmpty)
                       IconButton(
                         icon: const Icon(Icons.refresh),
-                        tooltip: '重置为默认',
+                        tooltip: l10n.resetDefault,
                         onPressed: () async {
                           final prefs = await SharedPreferences.getInstance();
                           await prefs.remove('download_path');
@@ -367,7 +368,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     IconButton(
                       icon: const Icon(Icons.folder_open),
-                      tooltip: '选择文件夹',
+                      tooltip: l10n.selectFolder,
                       onPressed: _pickDownloadPath,
                     ),
                   ],
@@ -378,7 +379,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 24),
         Text(
-          '聊天颜色设置',
+          l10n.colorSettings,
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
@@ -387,7 +388,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               ListTile(
                 leading: const Icon(Icons.chat_bubble),
-                title: const Text('我的消息气泡颜色'),
+                title: Text(l10n.myBubbleColor),
                 trailing: Container(
                   width: 40,
                   height: 40,
@@ -400,7 +401,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () async {
                   await _pickColor(
                     context,
-                    '选择我的消息颜色',
+                    l10n.pickMyColor,
                     colors.myMessageBubble,
                     (color) async {
                       final newColors = colors.copyWith(myMessageBubble: color);
@@ -413,7 +414,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.chat_bubble_outline),
-                title: const Text('对方消息气泡颜色'),
+                title: Text(l10n.otherBubbleColor),
                 trailing: Container(
                   width: 40,
                   height: 40,
@@ -426,7 +427,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () async {
                   await _pickColor(
                     context,
-                    '选择对方消息颜色',
+                    l10n.pickOtherColor,
                     colors.otherMessageBubble,
                     (color) async {
                       final newColors = colors.copyWith(
@@ -441,7 +442,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.info),
-                title: const Text('系统消息/公告颜色'),
+                title: Text(l10n.systemMsgColor),
                 trailing: Container(
                   width: 40,
                   height: 40,
@@ -452,9 +453,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 onTap: () async {
-                  await _pickColor(context, '选择系统消息颜色', colors.systemMessage, (
-                    color,
-                  ) async {
+                  await _pickColor(
+                    context,
+                    l10n.pickSystemColor,
+                    colors.systemMessage,
+                    (color) async {
                     final newColors = colors.copyWith(systemMessage: color);
                     await newColors.save();
                     await _loadColors();
@@ -464,7 +467,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.block),
-                title: const Text('封禁提醒颜色'),
+                title: Text(l10n.banColor),
                 trailing: Container(
                   width: 40,
                   height: 40,
@@ -477,7 +480,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () async {
                   await _pickColor(
                     context,
-                    '选择封禁提醒颜色',
+                    l10n.pickBanColor,
                     colors.banNotification,
                     (color) async {
                       final newColors = colors.copyWith(banNotification: color);

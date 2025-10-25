@@ -32,8 +32,8 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   var _currentIndex = 0;
-  final _messages = <String>[];
-  StreamSubscription<String>? _subscription;
+  final _messages = <SocketMessage>[];
+  StreamSubscription<SocketMessage>? _subscription;
 
   @override
   void initState() {
