@@ -91,6 +91,7 @@ class _TouchFishAstraState extends State<TouchFishAstra> {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
+        fontFamily: 'HarmonyOS Sans',
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -98,6 +99,7 @@ class _TouchFishAstraState extends State<TouchFishAstra> {
           brightness: Brightness.dark,
         ),
         useMaterial3: true,
+        fontFamily: 'HarmonyOS Sans',
       ),
       themeMode: _themeMode,
       home: _socket != null && _username != null

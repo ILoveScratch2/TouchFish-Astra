@@ -224,6 +224,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 AppConstants.license,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 8),
+              Text(
+                isZh ? AppConstants.fontLicenseZh : AppConstants.fontLicenseEn,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ],
           ),
         ),

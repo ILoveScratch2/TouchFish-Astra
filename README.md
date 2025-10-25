@@ -26,3 +26,12 @@
 ## License
 
 本项目使用[GNU Affero General Public License v3.0](LICENSE)进行许可。
+
+
+## Font License
+
+本项目使用由华为终端有限公司提供的HarmonyOS Sans字体，字体软件受HarmonyOS Sans字体许可协议保护。
+
+字体版权归华为终端有限公司所有。
+
+详细信息请参阅[LICENSE-FONT](LICENSE-FONT)。
