@@ -18,7 +18,7 @@ class TouchFishAstra extends StatefulWidget {
 
 class _TouchFishAstraState extends State<TouchFishAstra> {
   var _themeMode = ThemeMode.system;
-  var _locale = const Locale('en');
+  var _locale = const Locale('zh');
   SocketService? _socket;
   String? _username;
 
@@ -38,7 +38,7 @@ class _TouchFishAstraState extends State<TouchFishAstra> {
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     final theme = prefs.getString('theme_mode') ?? 'system';
-    final lang = prefs.getString('language') ?? 'en';
+    final lang = prefs.getString('language') ?? 'zh';
 
     setState(() {
       _themeMode = theme == 'dark'
