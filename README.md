@@ -6,7 +6,7 @@
 
 ## 简介
 
-在洛谷上看到了TouchFish的相关内容，~~非常适合摸鱼~~ 
+在洛谷上看到了[TouchFish的相关内容](https://github.com/2044-space-elevator/TouchFish)，~~非常适合摸鱼~~
 
 现有客户端大多仅局限于一个平台，于是实现一个跨平台的TouchFish客户端。
 
@@ -61,6 +61,8 @@
 ## 使用
 
 前往Releases页面下载对应平台的可执行文件，安装/运行即可。
+
+需要连接到一个运行中的 [TouchFish](https://github.com/2044-space-elevator/TouchFish)或其他兼容服务端 服务器。
 
 ## Contributing
 
