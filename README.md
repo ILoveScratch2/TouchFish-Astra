@@ -64,6 +64,15 @@
 
 需要连接到一个运行中的 [TouchFish](https://github.com/2044-space-elevator/TouchFish)或其他兼容服务端 服务器。
 
+
+Windows: 下载Windows压缩包，全部解压到一个文件夹后后运行即可（注意必须全部解压，而不是在压缩包内双击EXE）
+MacOS: 下载MacOS压缩包，全部解压到一个文件夹后运行即可（注意必须全部解压，而不是在压缩包内双击APP）
+你可能需要在设置里打开从未认证的开发者处下载的应用
+
+Linux: 解压后运行即可
+
+Android: 提供AAB和APK，如果你不知道什么是AAB请直接下载APK安装
+
 ## Contributing
 
 欢迎提交PR或Issue，帮助完善这个项目。
