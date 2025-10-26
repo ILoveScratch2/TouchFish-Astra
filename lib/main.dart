@@ -220,7 +220,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '${l10n.version} ${AppConstants.version} by ${AppConstants.author}',
+                    '${l10n.version} ${AppConstants.version}',
                   ),
                   const SizedBox(height: 32),
                   TextField(
