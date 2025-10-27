@@ -36,7 +36,6 @@ class _MainNavigationState extends State<MainNavigation> {
   var _currentTab = NavigationTab.chat;
   late final AdminScreen _adminScreen;
   late final ChatScreen _chatScreen;
-  late final SettingsScreen _settingsScreen;
 
   @override
   void initState() {
@@ -48,13 +47,6 @@ class _MainNavigationState extends State<MainNavigation> {
     );
     
     _adminScreen = AdminScreen(socket: widget.socket);
-    
-    _settingsScreen = SettingsScreen(
-      currentTheme: widget.currentTheme,
-      currentLocale: widget.currentLocale,
-      onThemeToggle: widget.onThemeToggle,
-      onLanguageChange: widget.onLanguageChange,
-    );
   }
 
   @override
@@ -73,7 +65,12 @@ class _MainNavigationState extends State<MainNavigation> {
       children: [
         _chatScreen,
         _adminScreen,
-        _settingsScreen,
+        SettingsScreen(
+          currentTheme: widget.currentTheme,
+          currentLocale: widget.currentLocale,
+          onThemeToggle: widget.onThemeToggle,
+          onLanguageChange: widget.onLanguageChange,
+        ),
       ],
     );
   }
