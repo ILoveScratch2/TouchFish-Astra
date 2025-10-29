@@ -143,10 +143,45 @@ class ConnectScreen extends StatefulWidget {
 }
 
 class _ConnectScreenState extends State<ConnectScreen> {
-  final _ipController = TextEditingController(text: '127.0.0.1');
-  final _portController = TextEditingController(text: '8080');
+  final _ipController = TextEditingController(text: 'www.bopid.cn');
+  final _portController = TextEditingController(text: '7001');
   final _usernameController = TextEditingController();
   var _connecting = false;
+  var _rememberConfig = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedConfig();
+  }
+  Future<void> _loadSavedConfig() async {
+    final prefs = await SharedPreferences.getInstance();
+    final remember = prefs.getBool('remember_config') ?? false;
+    
+    if (remember) {
+      setState(() {
+        _rememberConfig = true;
+        _ipController.text = prefs.getString('server_ip') ?? 'www.bopid.cn';
+        _portController.text = prefs.getString('server_port') ?? '7001';
+        _usernameController.text = prefs.getString('username') ?? '';
+      });
+    }
+  }
+  Future<void> _saveConfig() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    if (_rememberConfig) {
+      await prefs.setBool('remember_config', true);
+      await prefs.setString('server_ip', _ipController.text.trim());
+      await prefs.setString('server_port', _portController.text.trim());
+      await prefs.setString('username', _usernameController.text.trim());
+    } else {
+      await prefs.remove('remember_config');
+      await prefs.remove('server_ip');
+      await prefs.remove('server_port');
+      await prefs.remove('username');
+    }
+  }
 
   Future<void> _connect() async {
     final l10n = AppLocalizations.of(context);
@@ -158,6 +193,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
       _showError(l10n.fillAllFields);
       return;
     }
+    await _saveConfig();
 
     setState(() => _connecting = true);
 
@@ -248,7 +284,19 @@ class _ConnectScreenState extends State<ConnectScreen> {
                     ),
                     onSubmitted: (_) => _connect(),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
+                  CheckboxListTile(
+                    value: _rememberConfig,
+                    onChanged: (value) {
+                      setState(() {
+                        _rememberConfig = value ?? false;
+                      });
+                    },
+                    title: Text(l10n.rememberConfig),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  const SizedBox(height: 8),
                   SizedBox(
                     width: double.infinity,
                     height: 48,

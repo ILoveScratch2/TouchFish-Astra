@@ -24,6 +24,7 @@ class AppLocalizations {
     'connect': {'zh': '连接', 'en': 'Connect'},
     'fill_all_fields': {'zh': '请填写所有字段', 'en': 'Fill all fields'},
     'connection_failed': {'zh': '连接失败', 'en': 'Connection failed'},
+    'remember_config': {'zh': '记住配置', 'en': 'Remember Configuration'},
 
     // 设置界面
     'theme': {'zh': '主题', 'en': 'Theme'},
@@ -152,6 +153,7 @@ class AppLocalizations {
   String get connect => translate('connect');
   String get fillAllFields => translate('fill_all_fields');
   String get connectionFailed => translate('connection_failed');
+  String get rememberConfig => translate('remember_config');
 
   String get theme => translate('theme');
   String get themeDark => translate('theme_dark');
