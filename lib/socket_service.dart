@@ -181,7 +181,9 @@ class SocketService {
             _fileDataChunks.clear();
             continue;
           }
-        } catch (_) {}
+        } catch (_) {
+          continue;
+        }
       }
 
       _messageController.add(SocketMessage.text(line));
