@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MessageContent extends StatelessWidget {
   final String text;
@@ -28,11 +29,24 @@ class MessageContent extends StatelessWidget {
           p: textStyle,
           code: textStyle?.copyWith(fontFamily: 'monospace', backgroundColor: Colors.grey.withValues(alpha: 0.1)),
         ),
+        onTapLink: (text, href, title) => _launchUrl(href),
         shrinkWrap: true,
       );
     }
 
     return _buildMixedContent(context);
+  }
+
+  Future<void> _launchUrl(String? href) async {
+    if (href == null || href.isEmpty) return;
+    
+    final uri = Uri.tryParse(href);
+    if (uri == null) return;
+    
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+    }
   }
 
   Widget _buildMixedContent(BuildContext context) {
@@ -57,6 +71,7 @@ class MessageContent extends StatelessWidget {
             p: textStyle,
             code: textStyle?.copyWith(fontFamily: 'monospace', backgroundColor: Colors.grey.withValues(alpha: 0.1)),
           ),
+          onTapLink: (text, href, title) => _launchUrl(href),
           shrinkWrap: true,
         );
       }).toList(),
