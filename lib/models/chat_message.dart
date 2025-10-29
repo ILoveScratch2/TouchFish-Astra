@@ -77,16 +77,23 @@ class ChatMessage {
       );
     }
 
-    if (trimmed.contains('[') && trimmed.contains(']')) {
-      final bracketEnd = trimmed.indexOf(']');
-      if (bracketEnd > 0 && bracketEnd < 20) {
-        return ChatMessage(
-          type: MessageType.systemMessage,
-          sender: 'system',
-          content: trimmed,
-          isMine: false,
-        );
-      }
+    final broadcastPattern = RegExp(r'^\[.+?广播\]\s');
+    if (broadcastPattern.hasMatch(trimmed)) {
+      return ChatMessage(
+        type: MessageType.systemMessage,
+        sender: 'system',
+        content: trimmed,
+        isMine: false,
+      );
+    }
+    final systemPattern = RegExp(r'^\[.+?提示\]\s');
+    if (systemPattern.hasMatch(trimmed)) {
+      return ChatMessage(
+        type: MessageType.systemMessage,
+        sender: 'system',
+        content: trimmed,
+        isMine: false,
+      );
     }
 
     if (trimmed.contains(':')) {
