@@ -85,6 +85,8 @@ class AppLocalizations {
     'markdown_hint': {'zh': '启用后将渲染消息中的Markdown和LaTeX公式', 'en': 'Render Markdown and LaTeX formulas in messages'},
     'enter_to_send': {'zh': 'Enter键发送消息', 'en': 'Enter to Send'},
     'enter_to_send_hint': {'zh': '开启时按Enter发送(单行输入);关闭时支持多行输入', 'en': 'When enabled, press Enter to send (single line); when disabled, multiline input'},
+    'enable_notifications': {'zh': '启用消息通知', 'en': 'Enable Notifications'},
+    'notifications_hint': {'zh': '收到新消息时显示系统通知', 'en': 'Show system notifications for new messages'},
 
     // 管理员功能
     'admin_broadcast': {'zh': '广播消息', 'en': 'Broadcast Message'},
@@ -212,6 +214,8 @@ class AppLocalizations {
   String get markdownHint => translate('markdown_hint');
   String get enterToSend => translate('enter_to_send');
   String get enterToSendHint => translate('enter_to_send_hint');
+  String get enableNotifications => translate('enable_notifications');
+  String get notificationsHint => translate('notifications_hint');
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

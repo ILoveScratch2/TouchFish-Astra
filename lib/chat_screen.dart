@@ -9,6 +9,7 @@ import 'app_localizations.dart';
 import 'models/chat_message.dart';
 import 'models/chat_colors.dart';
 import 'widgets/message_content.dart';
+import 'notification_service.dart';
 
 enum ChatViewMode { list, bubble }
 
@@ -45,9 +46,22 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         _messages.add(msg);
       });
+      _handleNotification(msg);
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollDown());
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollDown());
+  }
+
+  void _handleNotification(SocketMessage msg) {
+    if (msg.type == 'text') {
+      final chatMsg = ChatMessage.fromSocketMessage(msg, widget.username);
+      if (chatMsg.type == MessageType.userMessage && !chatMsg.isMine) {
+        NotificationService().showMessageNotification(
+          chatMsg.sender,
+          chatMsg.content,
+        );
+      }
+    }
   }
 
   Future<void> _loadSettings() async {

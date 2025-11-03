@@ -6,8 +6,13 @@ import 'main_navigation.dart';
 import 'settings_screen.dart';
 import 'app_localizations.dart';
 import 'constants.dart';
+import 'notification_service.dart';
 
-void main() => runApp(const TouchFishAstra());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService().initialize();
+  runApp(const TouchFishAstra());
+}
 
 class TouchFishAstra extends StatefulWidget {
   const TouchFishAstra({super.key});

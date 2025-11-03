@@ -34,6 +34,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _downloadPath = '';
   bool _markdownRendering = true;
   bool _enterToSend = true;
+  bool _enableNotifications = false;
 
   @override
   void initState() {
@@ -64,6 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _downloadPath = prefs.getString('download_path') ?? defaultPath;
       _markdownRendering = prefs.getBool('markdown_rendering') ?? true;
       _enterToSend = prefs.getBool('enter_to_send') ?? true;
+      _enableNotifications = prefs.getBool('enable_notifications') ?? false;
     });
   }
 
@@ -380,6 +382,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   await prefs.setBool('enter_to_send', value);
                   setState(() {
                     _enterToSend = value;
+                  });
+                },
+              ),
+              const Divider(height: 1),
+              SwitchListTile(
+                secondary: const Icon(Icons.notifications),
+                title: Text(l10n.enableNotifications),
+                subtitle: Text(l10n.notificationsHint),
+                value: _enableNotifications,
+                onChanged: (value) async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('enable_notifications', value);
+                  setState(() {
+                    _enableNotifications = value;
                   });
                 },
               ),
