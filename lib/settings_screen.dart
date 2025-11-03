@@ -14,6 +14,7 @@ class SettingsScreen extends StatefulWidget {
   final Locale currentLocale;
   final VoidCallback onThemeToggle;
   final Function(String) onLanguageChange;
+  final ValueNotifier<int>? settingsChangeNotifier;
 
   const SettingsScreen({
     super.key,
@@ -21,6 +22,7 @@ class SettingsScreen extends StatefulWidget {
     required this.currentLocale,
     required this.onThemeToggle,
     required this.onLanguageChange,
+    this.settingsChangeNotifier,
   });
 
   @override
@@ -383,6 +385,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   setState(() {
                     _enterToSend = value;
                   });
+                  widget.settingsChangeNotifier?.value++;
                 },
               ),
               const Divider(height: 1),

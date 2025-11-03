@@ -36,6 +36,7 @@ class _MainNavigationState extends State<MainNavigation> {
   var _currentTab = NavigationTab.chat;
   late final AdminScreen _adminScreen;
   late final ChatScreen _chatScreen;
+  final _settingsChangeNotifier = ValueNotifier<int>(0);
 
   @override
   void initState() {
@@ -44,6 +45,7 @@ class _MainNavigationState extends State<MainNavigation> {
     _chatScreen = ChatScreen(
       socket: widget.socket,
       username: widget.username,
+      settingsChangeNotifier: _settingsChangeNotifier,
     );
     
     _adminScreen = AdminScreen(socket: widget.socket);
@@ -51,6 +53,7 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   void dispose() {
+    _settingsChangeNotifier.dispose();
     super.dispose();
   }
 
@@ -70,6 +73,7 @@ class _MainNavigationState extends State<MainNavigation> {
           currentLocale: widget.currentLocale,
           onThemeToggle: widget.onThemeToggle,
           onLanguageChange: widget.onLanguageChange,
+          settingsChangeNotifier: _settingsChangeNotifier,
         ),
       ],
     );

@@ -16,11 +16,13 @@ enum ChatViewMode { list, bubble }
 class ChatScreen extends StatefulWidget {
   final SocketService socket;
   final String username;
+  final ValueNotifier<int>? settingsChangeNotifier;
 
   const ChatScreen({
     super.key,
     required this.socket,
     required this.username,
+    this.settingsChangeNotifier,
   });
 
   @override
@@ -49,7 +51,12 @@ class _ChatScreenState extends State<ChatScreen> {
       _handleNotification(msg);
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollDown());
     });
+    widget.settingsChangeNotifier?.addListener(_onSettingsChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollDown());
+  }
+
+  void _onSettingsChanged() {
+    _loadSettings();
   }
 
   void _handleNotification(SocketMessage msg) {
@@ -88,6 +95,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    widget.settingsChangeNotifier?.removeListener(_onSettingsChanged);
     _subscription?.cancel();
     _controller.dispose();
     _scrollController.dispose();
