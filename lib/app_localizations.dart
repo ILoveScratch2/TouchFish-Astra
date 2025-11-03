@@ -40,23 +40,61 @@ class AppLocalizations {
 
     // 文件传输
     'user_joined': {'zh': '用户 {0} 加入聊天室。', 'en': 'User {0} joined the chat.'},
-    'file_received': {'zh': '[文件传输] 文件接收完成: {0} (未自动保存)', 'en': '[File Transfer] File received: {0} (not auto-saved)'},
-    'file_size_mismatch': {'zh': '[文件传输] 警告: 文件大小不匹配', 'en': '[File Transfer] Warning: File size mismatch'},
-    'cannot_create_dir': {'zh': '[文件传输] 无法创建下载目录: {0}', 'en': '[File Transfer] Cannot create download directory: {0}'},
-    'cannot_get_dir': {'zh': '[文件传输] 无法获取下载目录', 'en': '[File Transfer] Cannot get download directory'},
-    'file_saved': {'zh': '[文件传输] 文件已保存: {0}', 'en': '[File Transfer] File saved: {0}'},
-    'file_save_failed': {'zh': '[文件传输] 保存失败: {0}', 'en': '[File Transfer] Save failed: {0}'},
-    'receiving_file': {'zh': '[文件传输] 正在接收文件: {0}', 'en': '[File Transfer] Receiving file: {0}'},
-    
+    'file_received': {
+      'zh': '[文件传输] 文件接收完成: {0} (未自动保存)',
+      'en': '[File Transfer] File received: {0} (not auto-saved)',
+    },
+    'file_size_mismatch': {
+      'zh': '[文件传输] 警告: 文件大小不匹配',
+      'en': '[File Transfer] Warning: File size mismatch',
+    },
+    'cannot_create_dir': {
+      'zh': '[文件传输] 无法创建下载目录: {0}',
+      'en': '[File Transfer] Cannot create download directory: {0}',
+    },
+    'cannot_get_dir': {
+      'zh': '[文件传输] 无法获取下载目录',
+      'en': '[File Transfer] Cannot get download directory',
+    },
+    'file_saved': {
+      'zh': '[文件传输] 文件已保存: {0}',
+      'en': '[File Transfer] File saved: {0}',
+    },
+    'file_save_failed': {
+      'zh': '[文件传输] 保存失败: {0}',
+      'en': '[File Transfer] Save failed: {0}',
+    },
+    'receiving_file': {
+      'zh': '[文件传输] 正在接收文件: {0}',
+      'en': '[File Transfer] Receiving file: {0}',
+    },
+
+    // 连接状态
+    'disconnected_from_server': {
+      'zh': '[系统提示] 与服务器的连接已断开',
+      'en': '[System] Disconnected from server',
+    },
+    'connection_lost': {'zh': '连接已断开', 'en': 'Connection Lost'},
+    'reconnecting': {'zh': '重新连接中...', 'en': 'Reconnecting...'},
+
     // 文件对话框
     'file_saved_title': {'zh': '文件已保存', 'en': 'File Saved'},
     'file_location': {'zh': '文件位置:', 'en': 'File Location:'},
-    'file_location_hint': {'zh': '提示: 您可以在文件管理器中找到此文件', 'en': 'Hint: You can find this file in the file manager'},
+    'file_location_hint': {
+      'zh': '提示: 您可以在文件管理器中找到此文件',
+      'en': 'Hint: You can find this file in the file manager',
+    },
     'close': {'zh': '关闭', 'en': 'Close'},
     'open_file': {'zh': '打开文件', 'en': 'Open File'},
-    'cannot_open_file': {'zh': '无法打开文件，请在文件管理器中查找', 'en': 'Cannot open file, please find it in the file manager'},
+    'cannot_open_file': {
+      'zh': '无法打开文件，请在文件管理器中查找',
+      'en': 'Cannot open file, please find it in the file manager',
+    },
     'open_failed': {'zh': '打开失败: {0}', 'en': 'Open failed: {0}'},
-    'cannot_open_location': {'zh': '无法打开文件位置: {0}', 'en': 'Cannot open file location: {0}'},
+    'cannot_open_location': {
+      'zh': '无法打开文件位置: {0}',
+      'en': 'Cannot open file location: {0}',
+    },
 
     // 设置界面
     'cancel': {'zh': '取消', 'en': 'Cancel'},
@@ -67,36 +105,64 @@ class AppLocalizations {
     'bubble': {'zh': '气泡', 'en': 'Bubble'},
     'list': {'zh': '列表', 'en': 'List'},
     'auto_save_files': {'zh': '自动保存接收的文件', 'en': 'Auto-save received files'},
-    'auto_save_hint': {'zh': '文件将保存到指定文件夹', 'en': 'Files will be saved to the specified folder'},
+    'auto_save_hint': {
+      'zh': '文件将保存到指定文件夹',
+      'en': 'Files will be saved to the specified folder',
+    },
     'download_path': {'zh': '下载保存路径', 'en': 'Download Path'},
     'default_folder': {'zh': '使用默认下载文件夹', 'en': 'Use default download folder'},
     'reset_default': {'zh': '重置为默认', 'en': 'Reset to default'},
     'select_folder': {'zh': '选择文件夹', 'en': 'Select Folder'},
     'color_settings': {'zh': '聊天颜色设置', 'en': 'Chat Color Settings'},
     'my_bubble_color': {'zh': '我的消息气泡颜色', 'en': 'My Message Bubble Color'},
-    'other_bubble_color': {'zh': '对方消息气泡颜色', 'en': 'Other Message Bubble Color'},
-    'system_msg_color': {'zh': '系统消息/公告颜色', 'en': 'System Message/Announcement Color'},
+    'other_bubble_color': {
+      'zh': '对方消息气泡颜色',
+      'en': 'Other Message Bubble Color',
+    },
+    'system_msg_color': {
+      'zh': '系统消息/公告颜色',
+      'en': 'System Message/Announcement Color',
+    },
     'ban_color': {'zh': '封禁提醒颜色', 'en': 'Ban Notification Color'},
     'pick_my_color': {'zh': '选择我的消息颜色', 'en': 'Pick My Message Color'},
     'pick_other_color': {'zh': '选择对方消息颜色', 'en': 'Pick Other Message Color'},
     'pick_system_color': {'zh': '选择系统消息颜色', 'en': 'Pick System Message Color'},
     'pick_ban_color': {'zh': '选择封禁提醒颜色', 'en': 'Pick Ban Notification Color'},
-    'markdown_rendering': {'zh': 'Markdown/LaTeX渲染', 'en': 'Markdown/LaTeX Rendering'},
-    'markdown_hint': {'zh': '启用后将渲染消息中的Markdown和LaTeX公式', 'en': 'Render Markdown and LaTeX formulas in messages'},
+    'markdown_rendering': {
+      'zh': 'Markdown/LaTeX渲染',
+      'en': 'Markdown/LaTeX Rendering',
+    },
+    'markdown_hint': {
+      'zh': '启用后将渲染消息中的Markdown和LaTeX公式',
+      'en': 'Render Markdown and LaTeX formulas in messages',
+    },
     'enter_to_send': {'zh': 'Enter键发送消息', 'en': 'Enter to Send'},
-    'enter_to_send_hint': {'zh': '开启时按Enter发送(单行输入);关闭时支持多行输入', 'en': 'When enabled, press Enter to send (single line); when disabled, multiline input'},
+    'enter_to_send_hint': {
+      'zh': '开启时按Enter发送(单行输入);关闭时支持多行输入',
+      'en':
+          'When enabled, press Enter to send (single line); when disabled, multiline input',
+    },
     'enable_notifications': {'zh': '启用消息通知', 'en': 'Enable Notifications'},
-    'notifications_hint': {'zh': '收到新消息时显示系统通知', 'en': 'Show system notifications for new messages'},
+    'notifications_hint': {
+      'zh': '收到新消息时显示系统通知',
+      'en': 'Show system notifications for new messages',
+    },
 
     // 管理员功能
     'admin_broadcast': {'zh': '广播消息', 'en': 'Broadcast Message'},
-    'admin_broadcast_hint': {'zh': '输入要广播的消息内容', 'en': 'Enter message to broadcast'},
+    'admin_broadcast_hint': {
+      'zh': '输入要广播的消息内容',
+      'en': 'Enter message to broadcast',
+    },
     'admin_ban': {'zh': '封禁用户', 'en': 'Ban User'},
     'admin_ban_hint': {'zh': '输入要封禁的IP', 'en': 'Enter IP to ban'},
     'admin_enable': {'zh': '解封用户', 'en': 'Unban User'},
     'admin_enable_hint': {'zh': '输入要解封的IP', 'en': 'Enter IP to unban'},
     'admin_set': {'zh': '设置配置', 'en': 'Set Configuration'},
-    'admin_set_hint': {'zh': '输入配置项和值 (格式: key value)', 'en': 'Enter config key and value (format: key value)'},
+    'admin_set_hint': {
+      'zh': '输入配置项和值 (格式: key value)',
+      'en': 'Enter config key and value (format: key value)',
+    },
     'admin_accept': {'zh': '接受加入请求', 'en': 'Accept Join Request'},
     'admin_accept_hint': {'zh': '输入要接受的请求', 'en': 'Enter request to accept'},
     'admin_reject': {'zh': '拒绝加入请求', 'en': 'Reject Join Request'},
@@ -104,26 +170,52 @@ class AppLocalizations {
     'admin_search': {'zh': '搜索用户', 'en': 'Search User'},
     'admin_search_hint': {'zh': '输入搜索内容', 'en': 'Enter content to search'},
     'admin_req': {'zh': '查看加入请求', 'en': 'View Join Requests'},
-    'admin_req_hint': {'zh': '查看所有待处理的加入请求', 'en': 'View all pending join requests'},
+    'admin_req_hint': {
+      'zh': '查看所有待处理的加入请求',
+      'en': 'View all pending join requests',
+    },
     'admin_execute': {'zh': '执行', 'en': 'Execute'},
     'admin_results': {'zh': '执行结果', 'en': 'Results'},
     'admin_clear': {'zh': '清空', 'en': 'Clear'},
     'admin_connect_title': {'zh': '连接管理员控制台', 'en': 'Connect to Admin Console'},
-    'admin_connect_hint': {'zh': '请输入服务器管理员端口\n服务端执行 "admin on" 后会显示', 'en': 'Enter admin port\nShown after server executes "admin on"'},
+    'admin_connect_hint': {
+      'zh': '请输入服务器管理员端口\n服务端执行 "admin on" 后会显示',
+      'en': 'Enter admin port\nShown after server executes "admin on"',
+    },
     'admin_port': {'zh': '管理员端口', 'en': 'Admin Port'},
     'admin_connect_button': {'zh': '连接管理员控制台', 'en': 'Connect to Admin'},
     'admin_connecting': {'zh': '连接中...', 'en': 'Connecting...'},
     'admin_connected': {'zh': '管理员连接成功', 'en': 'Admin connected'},
-    'admin_connect_failed': {'zh': '连接失败：无权限或端口错误', 'en': 'Connection failed: unauthorized or invalid port'},
-    'admin_unauthorized': {'zh': '无管理员权限或端口错误\n请检查：1. 服务端是否执行了 "admin on"\n2. 端口号是否正确\n3. 您的IP是否在管理员列表', 'en': 'Unauthorized or invalid port\nCheck: 1. Server executed "admin on"\n2. Port number is correct\n3. Your IP is in admin list'},
-    'admin_status_connected': {'zh': '已连接到管理员控制台', 'en': 'Connected to Admin Console'},
+    'admin_connect_failed': {
+      'zh': '连接失败：无权限或端口错误',
+      'en': 'Connection failed: unauthorized or invalid port',
+    },
+    'admin_unauthorized': {
+      'zh':
+          '无管理员权限或端口错误\n请检查：1. 服务端是否执行了 "admin on"\n2. 端口号是否正确\n3. 您的IP是否在管理员列表',
+      'en':
+          'Unauthorized or invalid port\nCheck: 1. Server executed "admin on"\n2. Port number is correct\n3. Your IP is in admin list',
+    },
+    'admin_status_connected': {
+      'zh': '已连接到管理员控制台',
+      'en': 'Connected to Admin Console',
+    },
     'admin_disconnect': {'zh': '断开', 'en': 'Disconnect'},
-    'admin_removed': {'zh': '您已被移除管理员列表', 'en': 'You have been removed from admin list'},
+    'admin_removed': {
+      'zh': '您已被移除管理员列表',
+      'en': 'You have been removed from admin list',
+    },
     'admin_server_closed': {'zh': '服务器已关闭', 'en': 'Server closed'},
     'admin_invalid_port': {'zh': '无效的端口号', 'en': 'Invalid port number'},
     'admin_search_type': {'zh': '搜索类型', 'en': 'Search Type'},
-    'admin_search_param_hint': {'zh': '输入搜索参数（用户名/IP）', 'en': 'Enter search parameter (username/IP)'},
-    'admin_search_times_hint': {'zh': '输入最小发送次数', 'en': 'Enter minimum send times'},
+    'admin_search_param_hint': {
+      'zh': '输入搜索参数（用户名/IP）',
+      'en': 'Enter search parameter (username/IP)',
+    },
+    'admin_search_times_hint': {
+      'zh': '输入最小发送次数',
+      'en': 'Enter minimum send times',
+    },
     'admin_set_option': {'zh': '配置选项', 'en': 'Configuration Option'},
   };
 
@@ -169,13 +261,21 @@ class AppLocalizations {
 
   // 文件传输
   String userJoined(String username) => translate('user_joined', [username]);
-  String fileReceived(String filename) => translate('file_received', [filename]);
+  String fileReceived(String filename) =>
+      translate('file_received', [filename]);
   String get fileSizeMismatch => translate('file_size_mismatch');
-  String cannotCreateDir(String error) => translate('cannot_create_dir', [error]);
+  String cannotCreateDir(String error) =>
+      translate('cannot_create_dir', [error]);
   String get cannotGetDir => translate('cannot_get_dir');
   String fileSaved(String path) => translate('file_saved', [path]);
   String fileSaveFailed(String error) => translate('file_save_failed', [error]);
-  String receivingFile(String filename) => translate('receiving_file', [filename]);
+  String receivingFile(String filename) =>
+      translate('receiving_file', [filename]);
+
+  // 连接状态
+  String get disconnectedFromServer => translate('disconnected_from_server');
+  String get connectionLost => translate('connection_lost');
+  String get reconnecting => translate('reconnecting');
 
   // 文件对话框
   String get fileSavedTitle => translate('file_saved_title');
@@ -185,7 +285,8 @@ class AppLocalizations {
   String get openFile => translate('open_file');
   String get cannotOpenFile => translate('cannot_open_file');
   String openFailed(String error) => translate('open_failed', [error]);
-  String cannotOpenLocation(String error) => translate('cannot_open_location', [error]);
+  String cannotOpenLocation(String error) =>
+      translate('cannot_open_location', [error]);
 
   // 设置界面
   String get cancel => translate('cancel');

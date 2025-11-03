@@ -16,10 +16,10 @@ class SocketMessage {
   SocketMessage(this.type, this.content, [this.metadata]);
 
   factory SocketMessage.text(String text) => SocketMessage('text', text);
-  
+
   factory SocketMessage.userJoin(String username) =>
       SocketMessage('user_join', username);
-  
+
   factory SocketMessage.fileStatus(String statusKey, [List<String>? args]) =>
       SocketMessage('file_status', statusKey, {'args': args ?? []});
 }
@@ -27,6 +27,7 @@ class SocketMessage {
 class SocketService {
   Socket? _socket;
   final _messageController = StreamController<SocketMessage>.broadcast();
+  final _connectionController = StreamController<bool>.broadcast();
   final _buffer = <int>[];
   Map<String, dynamic>? serverInfo;
 
@@ -36,6 +37,8 @@ class SocketService {
   final List<String> _fileDataChunks = [];
 
   Stream<SocketMessage> get messages => _messageController.stream;
+  Stream<bool> get connectionStatus => _connectionController.stream;
+  bool get isConnected => _socket != null;
 
   Future<void> _saveReceivedFile(String filename, List<String> chunks) async {
     try {
@@ -120,11 +123,55 @@ class SocketService {
   Future<bool> connect(String ip, int port, String username) async {
     try {
       _socket = await Socket.connect(ip, port);
+      try {
+        _socket!.setOption(SocketOption.tcpNoDelay, true);
+        if (Platform.isWindows) {
+          _socket!.setRawOption(
+            RawSocketOption(
+              0xFFFF, // SOL_SOCKET
+              0x0008, // SO_KEEPALIVE
+              Uint8List.fromList([1, 0, 0, 0]), // TRUE
+            ),
+          );
+        } else {
+          _socket!.setRawOption(
+            RawSocketOption(
+              1, // SOL_SOCKET
+              9, // SO_KEEPALIVE
+              Uint8List.fromList([1, 0, 0, 0]), // TRUE
+            ),
+          );
+          try {
+            // TCP_KEEPIDLE = 180 * 60 = 10800秒
+            final idleBytes = Uint8List(4);
+            final idleValue = 10800;
+            idleBytes[0] = idleValue & 0xFF;
+            idleBytes[1] = (idleValue >> 8) & 0xFF;
+            idleBytes[2] = (idleValue >> 16) & 0xFF;
+            idleBytes[3] = (idleValue >> 24) & 0xFF;
+            _socket!.setRawOption(RawSocketOption(6, 4, idleBytes));
+
+            // TCP_KEEPINTVL = 30
+            final intvlBytes = Uint8List(4);
+            final intvlValue = 30;
+            intvlBytes[0] = intvlValue & 0xFF;
+            intvlBytes[1] = (intvlValue >> 8) & 0xFF;
+            intvlBytes[2] = (intvlValue >> 16) & 0xFF;
+            intvlBytes[3] = (intvlValue >> 24) & 0xFF;
+            _socket!.setRawOption(RawSocketOption(6, 5, intvlBytes));
+          } catch (_) {
+          }
+        }
+      } catch (e) {
+      }
+
       _socket!.write('用户 $username 加入聊天室。\n');
       serverInfo = {'ip': ip, 'port': port, 'username': username};
+      _connectionController.add(true);
       _listen();
       return true;
     } catch (e) {
+      _connectionController.add(false);
       return false;
     }
   }
@@ -135,9 +182,19 @@ class SocketService {
         _buffer.addAll(data);
         _processBuffer();
       },
-      onError: (_) => disconnect(),
-      onDone: disconnect,
+      onError: (_) => _handleDisconnection(),
+      onDone: _handleDisconnection,
+      cancelOnError: false,
     );
+  }
+
+  void _handleDisconnection() {
+    if (_socket == null) return;
+    _connectionController.add(false);
+    _messageController.add(
+      SocketMessage('connection_lost', 'disconnected_from_server'),
+    );
+    disconnect();
   }
 
   Future<void> _processBuffer() async {
@@ -224,6 +281,17 @@ class SocketService {
   void disconnect() {
     _socket?.close();
     _socket = null;
-    // Don't close the controller - let subscribers cancel themselves
+    serverInfo = null;
+    _buffer.clear();
+    _fileState = _FileTransferState.none;
+    _currentFilename = null;
+    _currentFileSize = null;
+    _fileDataChunks.clear();
+  }
+
+  void dispose() {
+    disconnect();
+    _messageController.close();
+    _connectionController.close();
   }
 }

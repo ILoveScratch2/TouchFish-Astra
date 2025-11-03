@@ -26,13 +26,21 @@ class ChatMessage {
 
   factory ChatMessage.fromSocketMessage(SocketMessage msg, String myUsername) {
     switch (msg.type) {
+      case 'connection_lost':
+        return ChatMessage(
+          type: MessageType.systemMessage,
+          sender: 'system',
+          content: msg.content, // 'disconnected_from_server'
+          isMine: false,
+        );
+
       case 'file_status':
         final args = (msg.metadata?['args'] as List?)?.cast<String>() ?? [];
         String? filePath;
         if (msg.content == 'file_saved' && args.isNotEmpty) {
           filePath = args[0];
         }
-        
+
         return ChatMessage(
           type: MessageType.fileTransfer,
           sender: 'system',

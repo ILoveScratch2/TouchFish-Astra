@@ -34,6 +34,20 @@ class _TouchFishAstraState extends State<TouchFishAstra> {
   }
 
   void _onConnected(SocketService socket, String username) {
+    socket.connectionStatus.listen((connected) {
+      if (!connected && mounted) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            setState(() {
+              _socket?.dispose();
+              _socket = null;
+              _username = null;
+            });
+          }
+        });
+      }
+    });
+
     setState(() {
       _socket = socket;
       _username = username;
@@ -84,7 +98,6 @@ class _TouchFishAstraState extends State<TouchFishAstra> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'TouchFishAstra',
-      // i18n配置 - 就这三行，简单粗暴
       locale: _locale,
       localizationsDelegates: const [
         AppLocalizationsDelegate(),
@@ -159,10 +172,11 @@ class _ConnectScreenState extends State<ConnectScreen> {
     super.initState();
     _loadSavedConfig();
   }
+
   Future<void> _loadSavedConfig() async {
     final prefs = await SharedPreferences.getInstance();
     final remember = prefs.getBool('remember_config') ?? false;
-    
+
     if (remember) {
       setState(() {
         _rememberConfig = true;
@@ -172,9 +186,10 @@ class _ConnectScreenState extends State<ConnectScreen> {
       });
     }
   }
+
   Future<void> _saveConfig() async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     if (_rememberConfig) {
       await prefs.setBool('remember_config', true);
       await prefs.setString('server_ip', _ipController.text.trim());
@@ -260,9 +275,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    '${l10n.version} ${AppConstants.version}',
-                  ),
+                  Text('${l10n.version} ${AppConstants.version}'),
                   const SizedBox(height: 32),
                   TextField(
                     controller: _ipController,

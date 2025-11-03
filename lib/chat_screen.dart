@@ -34,10 +34,12 @@ class _ChatScreenState extends State<ChatScreen> {
   final _scrollController = ScrollController();
   final _messages = <SocketMessage>[];
   StreamSubscription<SocketMessage>? _subscription;
+  StreamSubscription<bool>? _connectionSubscription;
   ChatViewMode _viewMode = ChatViewMode.bubble;
   ChatColors? _colors;
   bool _markdownEnabled = true;
   bool _enterToSend = true;
+  bool _isConnected = true;
 
   @override
   void initState() {
@@ -50,6 +52,17 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       _handleNotification(msg);
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollDown());
+    });
+    _connectionSubscription = widget.socket.connectionStatus.listen((
+      connected,
+    ) {
+      if (!mounted) return;
+      setState(() {
+        _isConnected = connected;
+      });
+      if (!connected) {
+        _showDisconnectionDialog();
+      }
     });
     widget.settingsChangeNotifier?.addListener(_onSettingsChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollDown());
@@ -93,10 +106,36 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  void _showDisconnectionDialog() {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => WillPopScope(
+        onWillPop: () async => false,
+        child: AlertDialog(
+          title: Text(l10n.connectionLost),
+          content: Text(l10n.disconnectedFromServer),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: Text(l10n.ok),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     widget.settingsChangeNotifier?.removeListener(_onSettingsChanged);
     _subscription?.cancel();
+    _connectionSubscription?.cancel();
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -115,6 +154,11 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   String _translateMessage(ChatMessage msg, AppLocalizations l10n) {
+    if (msg.type == MessageType.systemMessage &&
+        msg.content == 'disconnected_from_server') {
+      return l10n.disconnectedFromServer;
+    }
+
     // 文件传输状态消息
     if (msg.type == MessageType.fileTransfer) {
       switch (msg.content) {
@@ -141,10 +185,9 @@ class _ChatScreenState extends State<ChatScreen> {
     if (msg.type == MessageType.systemMessage && msg.content == 'user_joined') {
       return l10n.userJoined(msg.args.isNotEmpty ? msg.args[0] : '');
     }
-    
+
     return msg.content;
   }
-
 
   Future<void> _openFilePath(String filePath) async {
     try {
@@ -208,9 +251,9 @@ class _ChatScreenState extends State<ChatScreen> {
                       }
                     } catch (e) {
                       if (mounted) {
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(SnackBar(content: Text(l10n.openFailed('$e'))));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.openFailed('$e'))),
+                        );
                       }
                     }
                   },
@@ -234,10 +277,11 @@ class _ChatScreenState extends State<ChatScreen> {
   void _send() {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
-    text.split('\n')
+    text
+        .split('\n')
         .where((line) => line.trim().isNotEmpty)
         .forEach((line) => widget.socket.send(widget.username, line.trim()));
-    
+
     _controller.clear();
   }
 
@@ -261,6 +305,27 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Column(
       children: [
+        if (!_isConnected)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+            color: Colors.red.shade900,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.signal_wifi_off,
+                  size: 16,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.disconnectedFromServer,
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
         Expanded(
           child: _viewMode == ChatViewMode.bubble
               ? _buildBubbleView(chatMessages, colors, l10n)
