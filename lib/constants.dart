@@ -1,8 +1,8 @@
 /// 应用常量 - 单一数据源
 class AppConstants {
   // 版本信息
-  static const String version = '0.1.0';
-  static const String buildNumber = '1';
+  static const String version = '0.2.0';
+  static const String buildNumber = '2';
   static const String appName = 'TouchFishAstra';
   static const String author = 'ILoveScratch2';
 
