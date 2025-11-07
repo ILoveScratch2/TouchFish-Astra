@@ -135,11 +135,26 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Decode keystore (non-PR only)
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release-key.keystore
+
       - name: Build Android APK
         run: flutter build apk --release
+        env:
+          KEYSTORE_PATH: ${{ github.event_name != 'pull_request' && 'android/app/release-key.keystore' || '' }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Build Android App Bundle
         run: flutter build appbundle --release
+        env:
+          KEYSTORE_PATH: ${{ github.event_name != 'pull_request' && 'android/app/release-key.keystore' || '' }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
