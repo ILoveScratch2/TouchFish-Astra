@@ -125,12 +125,12 @@ jobs:
 
       - name: Decode keystore
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release-key.keystore
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > ${{ github.workspace }}/android/app/release-key.keystore
 
       - name: Build Android APK
         run: flutter build apk --release
         env:
-          KEYSTORE_PATH: android/app/release-key.keystore
+          KEYSTORE_PATH: ${{ github.workspace }}/android/app/release-key.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
@@ -138,7 +138,7 @@ jobs:
       - name: Build Android App Bundle
         run: flutter build appbundle --release
         env:
-          KEYSTORE_PATH: android/app/release-key.keystore
+          KEYSTORE_PATH: ${{ github.workspace }}/android/app/release-key.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
