@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:file_picker/file_picker.dart';
@@ -9,6 +11,7 @@ import 'constants.dart';
 import 'models/chat_colors.dart';
 import 'chat_screen.dart';
 import 'socket_service.dart';
+import 'boss_key_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   final ThemeMode currentTheme;
@@ -40,12 +43,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _markdownRendering = true;
   bool _enterToSend = true;
   bool _enableNotifications = false;
+  bool _bossKeyEnabled = false;
+  String _bossKeyShortcut = 'Ctrl + `';
+  final _bossKeyService = BossKeyService();
 
   @override
   void initState() {
     super.initState();
     _loadColors();
     _loadSettings();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  Future<void> _loadBossKeyShortcut() async {
+    final keyCode = await _bossKeyService.getKeyCode();
+    final modifiers = await _bossKeyService.getModifiers();
+    setState(() {
+      _bossKeyShortcut = _bossKeyService.formatShortcut(modifiers, keyCode);
+    });
   }
 
   Future<void> _loadSettings() async {
@@ -71,7 +90,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _markdownRendering = prefs.getBool('markdown_rendering') ?? true;
       _enterToSend = prefs.getBool('enter_to_send') ?? true;
       _enableNotifications = prefs.getBool('enable_notifications') ?? false;
+      _bossKeyEnabled = prefs.getBool('boss_key_enabled') ?? false;
     });
+    
+    await _loadBossKeyShortcut();
   }
 
   Future<void> _pickDownloadPath() async {
@@ -277,6 +299,125 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _showShortcutDialog() async {
+    final l10n = AppLocalizations.of(context);
+    String? recordedKey;
+    List<String> recordedModifiers = [];
+
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(l10n.bossKeyChange),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.bossKeyRecording),
+              const SizedBox(height: 16),
+              Focus(
+                autofocus: true,
+                onKeyEvent: (node, event) {
+                  if (event.runtimeType.toString().contains('KeyDownEvent')) {
+                    final key = event.physicalKey;
+                    final logicalKey = event.logicalKey;
+                    final mods = <String>[];
+                    
+                    if (logicalKey.keyId >= LogicalKeyboardKey.controlLeft.keyId &&
+                        logicalKey.keyId <= LogicalKeyboardKey.controlRight.keyId) {
+                      return KeyEventResult.handled;
+                    }
+                    if (logicalKey.keyId >= LogicalKeyboardKey.altLeft.keyId &&
+                        logicalKey.keyId <= LogicalKeyboardKey.altRight.keyId) {
+                      return KeyEventResult.handled;
+                    }
+                    if (logicalKey.keyId >= LogicalKeyboardKey.shiftLeft.keyId &&
+                        logicalKey.keyId <= LogicalKeyboardKey.shiftRight.keyId) {
+                      return KeyEventResult.handled;
+                    }
+                    if (logicalKey.keyId >= LogicalKeyboardKey.metaLeft.keyId &&
+                        logicalKey.keyId <= LogicalKeyboardKey.metaRight.keyId) {
+                      return KeyEventResult.handled;
+                    }
+
+                    if (HardwareKeyboard.instance.logicalKeysPressed.any((k) => 
+                        k.keyId >= LogicalKeyboardKey.controlLeft.keyId &&
+                        k.keyId <= LogicalKeyboardKey.controlRight.keyId)) {
+                      mods.add('control');
+                    }
+                    if (HardwareKeyboard.instance.logicalKeysPressed.any((k) => 
+                        k.keyId >= LogicalKeyboardKey.altLeft.keyId &&
+                        k.keyId <= LogicalKeyboardKey.altRight.keyId)) {
+                      mods.add('alt');
+                    }
+                    if (HardwareKeyboard.instance.logicalKeysPressed.any((k) => 
+                        k.keyId >= LogicalKeyboardKey.shiftLeft.keyId &&
+                        k.keyId <= LogicalKeyboardKey.shiftRight.keyId)) {
+                      mods.add('shift');
+                    }
+                    if (HardwareKeyboard.instance.logicalKeysPressed.any((k) => 
+                        k.keyId >= LogicalKeyboardKey.metaLeft.keyId &&
+                        k.keyId <= LogicalKeyboardKey.metaRight.keyId)) {
+                      mods.add('meta');
+                    }
+
+                    final keyLabel = key.debugName ?? '';
+                    if (keyLabel.isNotEmpty) {
+                      if (mods.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.bossKeyInvalid)),
+                        );
+                        return KeyEventResult.handled;
+                      }
+
+                      setState(() {
+                        recordedKey = keyLabel;
+                        recordedModifiers = mods;
+                      });
+                    }
+                  }
+                  return KeyEventResult.handled;
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Theme.of(context).colorScheme.primary),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    recordedKey != null
+                        ? _bossKeyService.formatShortcut(recordedModifiers, recordedKey!)
+                        : '...',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: recordedKey != null
+                  ? () async {
+                      await _bossKeyService.saveShortcut(recordedKey!, recordedModifiers);
+                      await _loadBossKeyShortcut();
+                      await _bossKeyService.unregister();
+                      await _bossKeyService.register();
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                      }
+                    }
+                  : null,
+              child: Text(l10n.ok),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -446,6 +587,68 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   });
                 },
               ),
+              if (!kIsWeb && Platform.isWindows) ...[
+                const Divider(height: 1),
+                SwitchListTile(
+                  secondary: const Icon(Icons.visibility_off),
+                  title: Text(l10n.bossKey),
+                  subtitle: Text(l10n.bossKeyHint),
+                  value: _bossKeyEnabled,
+                  onChanged: (value) async {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setBool('boss_key_enabled', value);
+                    setState(() {
+                      _bossKeyEnabled = value;
+                    });
+                    if (value) {
+                      await _bossKeyService.register();
+                    } else {
+                      await _bossKeyService.unregister();
+                    }
+                  },
+                ),
+                if (_bossKeyEnabled) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.keyboard),
+                    title: Text(l10n.bossKeyShortcut),
+                    subtitle: Text('${l10n.bossKeyCurrent}: $_bossKeyShortcut'),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.refresh),
+                          tooltip: l10n.bossKeyReset,
+                          onPressed: () async {
+                            await _bossKeyService.resetToDefault();
+                            await _loadBossKeyShortcut();
+                            await _bossKeyService.unregister();
+                            await _bossKeyService.register();
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          tooltip: l10n.bossKeyChange,
+                          onPressed: () => _showShortcutDialog(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+              if (kIsWeb || !Platform.isWindows) ...[
+                const Divider(height: 1),
+                ListTile(
+                  enabled: false,
+                  leading: const Icon(Icons.visibility_off),
+                  title: Text(l10n.bossKey),
+                  subtitle: Text(l10n.bossKeyWindowsOnly),
+                  trailing: const Switch(
+                    value: false,
+                    onChanged: null,
+                  ),
+                ),
+              ],
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.folder),

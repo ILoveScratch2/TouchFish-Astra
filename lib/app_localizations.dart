@@ -227,6 +227,17 @@ class AppLocalizations {
       'en': 'Enter minimum send times',
     },
     'admin_set_option': {'zh': '配置选项', 'en': 'Configuration Option'},
+    
+    'boss_key': {'zh': '老板键', 'en': 'Boss Key'},
+    'boss_key_hint': {'zh': '快捷键快速隐藏窗口', 'en': 'Hotkey to hide window quickly'},
+    'boss_key_windows_only': {'zh': '仅 Windows 可用', 'en': 'Windows only'},
+    'boss_key_shortcut': {'zh': '快捷键设置', 'en': 'Shortcut Setting'},
+    'boss_key_current': {'zh': '当前快捷键', 'en': 'Current Shortcut'},
+    'boss_key_change': {'zh': '更改快捷键', 'en': 'Change Shortcut'},
+    'boss_key_recording': {'zh': '按下您想要的快捷键...', 'en': 'Press your desired shortcut...'},
+    'boss_key_invalid': {'zh': '无效的快捷键', 'en': 'Invalid shortcut'},
+    'boss_key_conflict': {'zh': '快捷键冲突', 'en': 'Shortcut conflict'},
+    'boss_key_reset': {'zh': '重置为默认', 'en': 'Reset to Default'},
   };
 
   String translate(String key, [List<String> args = const []]) {
@@ -329,6 +340,16 @@ class AppLocalizations {
   String get notificationsHint => translate('notifications_hint');
   String get disconnectFromServer => translate('disconnect_from_server');
   String get confirmDisconnect => translate('confirm_disconnect');
+  String get bossKey => translate('boss_key');
+  String get bossKeyHint => translate('boss_key_hint');
+  String get bossKeyWindowsOnly => translate('boss_key_windows_only');
+  String get bossKeyShortcut => translate('boss_key_shortcut');
+  String get bossKeyCurrent => translate('boss_key_current');
+  String get bossKeyChange => translate('boss_key_change');
+  String get bossKeyRecording => translate('boss_key_recording');
+  String get bossKeyInvalid => translate('boss_key_invalid');
+  String get bossKeyConflict => translate('boss_key_conflict');
+  String get bossKeyReset => translate('boss_key_reset');
   String get confirmDisconnectMessage => translate('confirm_disconnect_message');
   String get disconnect => translate('disconnect');
 }

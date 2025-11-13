@@ -1,16 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:window_manager/window_manager.dart';
+import 'package:hotkey_manager/hotkey_manager.dart';
 import 'socket_service.dart';
 import 'main_navigation.dart';
 import 'settings_screen.dart';
 import 'app_localizations.dart';
 import 'constants.dart';
 import 'notification_service.dart';
+import 'boss_key_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService().initialize();
+  
+  if (!kIsWeb && Platform.isWindows) {
+    await windowManager.ensureInitialized();
+    await hotKeyManager.unregisterAll();
+  }
+  
   runApp(const TouchFishAstra());
 }
 
@@ -26,11 +37,18 @@ class _TouchFishAstraState extends State<TouchFishAstra> {
   var _locale = const Locale('zh');
   SocketService? _socket;
   String? _username;
+  final _bossKeyService = BossKeyService();
 
   @override
   void initState() {
     super.initState();
     _loadPreferences();
+  }
+
+  @override
+  void dispose() {
+    _bossKeyService.dispose();
+    super.dispose();
   }
 
   void _onConnected(SocketService socket, String username) {
@@ -67,6 +85,11 @@ class _TouchFishAstraState extends State<TouchFishAstra> {
           : ThemeMode.system;
       _locale = Locale(lang);
     });
+    
+    final bossKeyEnabled = prefs.getBool('boss_key_enabled') ?? false;
+    if (bossKeyEnabled) {
+      await _bossKeyService.register();
+    }
   }
 
   Future<void> _toggleTheme() async {
