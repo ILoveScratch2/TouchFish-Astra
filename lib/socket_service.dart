@@ -26,6 +26,7 @@ class SocketMessage {
 
 class SocketService {
   Socket? _socket;
+  StreamSubscription<Uint8List>? _socketSubscription;
   final _messageController = StreamController<SocketMessage>.broadcast();
   final _connectionController = StreamController<bool>.broadcast();
   final _buffer = <int>[];
@@ -41,6 +42,8 @@ class SocketService {
   bool get isConnected => _socket != null;
 
   Future<void> _saveReceivedFile(String filename, List<String> chunks) async {
+    if (_messageController.isClosed) return;
+    
     try {
       final prefs = await SharedPreferences.getInstance();
       final autoSave = prefs.getBool('auto_save_files') ?? true;
@@ -177,7 +180,7 @@ class SocketService {
   }
 
   void _listen() {
-    _socket?.listen(
+    _socketSubscription = _socket?.listen(
       (data) {
         _buffer.addAll(data);
         _processBuffer();
@@ -190,14 +193,17 @@ class SocketService {
 
   void _handleDisconnection() {
     if (_socket == null) return;
-    _connectionController.add(false);
-    _messageController.add(
-      SocketMessage('connection_lost', 'disconnected_from_server'),
-    );
+    if (!_messageController.isClosed) {
+      _messageController.add(
+        SocketMessage('connection_lost', 'disconnected_from_server'),
+      );
+    }
     disconnect();
   }
 
   Future<void> _processBuffer() async {
+    if (_messageController.isClosed) return;
+    
     while (_buffer.contains(10)) {
       final idx = _buffer.indexOf(10);
       final line = utf8.decode(_buffer.sublist(0, idx));
@@ -279,6 +285,13 @@ class SocketService {
   }
 
   void disconnect() {
+    if (_socket == null) return;
+    
+    _socketSubscription?.cancel();
+    _socketSubscription = null;
+    if (!_connectionController.isClosed) {
+      _connectionController.add(false);
+    }
     _socket?.close();
     _socket = null;
     serverInfo = null;

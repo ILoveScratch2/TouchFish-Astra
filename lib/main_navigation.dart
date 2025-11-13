@@ -74,6 +74,7 @@ class _MainNavigationState extends State<MainNavigation> {
           onThemeToggle: widget.onThemeToggle,
           onLanguageChange: widget.onLanguageChange,
           settingsChangeNotifier: _settingsChangeNotifier,
+          socketService: widget.socket,
         ),
       ],
     );

@@ -8,6 +8,7 @@ import 'app_localizations.dart';
 import 'constants.dart';
 import 'models/chat_colors.dart';
 import 'chat_screen.dart';
+import 'socket_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   final ThemeMode currentTheme;
@@ -15,6 +16,7 @@ class SettingsScreen extends StatefulWidget {
   final VoidCallback onThemeToggle;
   final Function(String) onLanguageChange;
   final ValueNotifier<int>? settingsChangeNotifier;
+  final SocketService? socketService;
 
   const SettingsScreen({
     super.key,
@@ -23,6 +25,7 @@ class SettingsScreen extends StatefulWidget {
     required this.onThemeToggle,
     required this.onLanguageChange,
     this.settingsChangeNotifier,
+    this.socketService,
   });
 
   @override
@@ -248,6 +251,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _handleDisconnect(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.confirmDisconnect),
+        content: Text(l10n.confirmDisconnectMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.disconnect),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && widget.socketService != null) {
+      widget.socketService!.disconnect();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -303,6 +332,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
         ),
+        const SizedBox(height: 16),
+        if (widget.socketService != null)
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.link_off),
+              title: Text(l10n.disconnectFromServer),
+              enabled: widget.socketService!.isConnected,
+              onTap: widget.socketService!.isConnected
+                  ? () => _handleDisconnect(context)
+                  : null,
+              trailing: widget.socketService!.isConnected
+                  ? const Icon(Icons.chevron_right)
+                  : null,
+            ),
+          ),
         const SizedBox(height: 24),
         Text(
           l10n.chatSettings,

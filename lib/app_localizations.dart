@@ -147,6 +147,16 @@ class AppLocalizations {
       'zh': '收到新消息时显示系统通知',
       'en': 'Show system notifications for new messages',
     },
+    'disconnect_from_server': {'zh': '断开与服务器的连接', 'en': 'Disconnect from Server'},
+    'confirm_disconnect': {
+      'zh': '确认断开连接',
+      'en': 'Confirm Disconnect',
+    },
+    'confirm_disconnect_message': {
+      'zh': '确定要断开与服务器的连接吗？',
+      'en': 'Are you sure you want to disconnect from the server?',
+    },
+    'disconnect': {'zh': '断开连接', 'en': 'Disconnect'},
 
     // 管理员功能
     'admin_broadcast': {'zh': '广播消息', 'en': 'Broadcast Message'},
@@ -317,6 +327,10 @@ class AppLocalizations {
   String get enterToSendHint => translate('enter_to_send_hint');
   String get enableNotifications => translate('enable_notifications');
   String get notificationsHint => translate('notifications_hint');
+  String get disconnectFromServer => translate('disconnect_from_server');
+  String get confirmDisconnect => translate('confirm_disconnect');
+  String get confirmDisconnectMessage => translate('confirm_disconnect_message');
+  String get disconnect => translate('disconnect');
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
