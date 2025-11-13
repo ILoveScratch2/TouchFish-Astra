@@ -39,6 +39,7 @@ class _ChatScreenState extends State<ChatScreen> {
   ChatColors? _colors;
   bool _markdownEnabled = true;
   bool _enterToSend = true;
+  bool _autoScroll = true;
   bool _isConnected = true;
 
   @override
@@ -51,7 +52,9 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages.add(msg);
       });
       _handleNotification(msg);
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollDown());
+      if (_autoScroll) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollDown());
+      }
     });
     _connectionSubscription = widget.socket.connectionStatus.listen((
       connected,
@@ -92,11 +95,13 @@ class _ChatScreenState extends State<ChatScreen> {
     final modeIndex = prefs.getInt('chat_view_mode') ?? 1;
     final markdownEnabled = prefs.getBool('markdown_rendering') ?? true;
     final enterToSend = prefs.getBool('enter_to_send') ?? true;
+    final autoScroll = prefs.getBool('auto_scroll') ?? true;
     if (!mounted) return;
     setState(() {
       _viewMode = ChatViewMode.values[modeIndex];
       _markdownEnabled = markdownEnabled;
       _enterToSend = enterToSend;
+      _autoScroll = autoScroll;
     });
 
     final colors = await ChatColors.load(isDark);

@@ -42,6 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _downloadPath = '';
   bool _markdownRendering = true;
   bool _enterToSend = true;
+  bool _autoScroll = true;
   bool _enableNotifications = false;
   bool _bossKeyEnabled = false;
   String _bossKeyShortcut = 'Ctrl + `';
@@ -89,6 +90,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _downloadPath = prefs.getString('download_path') ?? defaultPath;
       _markdownRendering = prefs.getBool('markdown_rendering') ?? true;
       _enterToSend = prefs.getBool('enter_to_send') ?? true;
+      _autoScroll = prefs.getBool('auto_scroll') ?? true;
       _enableNotifications = prefs.getBool('enable_notifications') ?? false;
       _bossKeyEnabled = prefs.getBool('boss_key_enabled') ?? false;
     });
@@ -569,6 +571,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   await prefs.setBool('enter_to_send', value);
                   setState(() {
                     _enterToSend = value;
+                  });
+                  widget.settingsChangeNotifier?.value++;
+                },
+              ),
+              const Divider(height: 1),
+              SwitchListTile(
+                secondary: const Icon(Icons.arrow_downward),
+                title: Text(l10n.autoScroll),
+                subtitle: Text(l10n.autoScrollHint),
+                value: _autoScroll,
+                onChanged: (value) async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('auto_scroll', value);
+                  setState(() {
+                    _autoScroll = value;
                   });
                   widget.settingsChangeNotifier?.value++;
                 },

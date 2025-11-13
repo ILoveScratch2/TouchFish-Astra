@@ -142,6 +142,11 @@ class AppLocalizations {
       'en':
           'When enabled, press Enter to send (single line); when disabled, multiline input',
     },
+    'auto_scroll': {'zh': '自动滚动到最新消息', 'en': 'Auto-scroll to Latest'},
+    'auto_scroll_hint': {
+      'zh': '开启后有新消息总是滚动到底部',
+      'en': 'When enabled, always scroll to bottom on new messages',
+    },
     'enable_notifications': {'zh': '启用消息通知', 'en': 'Enable Notifications'},
     'notifications_hint': {
       'zh': '收到新消息时显示系统通知',
@@ -336,6 +341,8 @@ class AppLocalizations {
   String get markdownHint => translate('markdown_hint');
   String get enterToSend => translate('enter_to_send');
   String get enterToSendHint => translate('enter_to_send_hint');
+  String get autoScroll => translate('auto_scroll');
+  String get autoScrollHint => translate('auto_scroll_hint');
   String get enableNotifications => translate('enable_notifications');
   String get notificationsHint => translate('notifications_hint');
   String get disconnectFromServer => translate('disconnect_from_server');
