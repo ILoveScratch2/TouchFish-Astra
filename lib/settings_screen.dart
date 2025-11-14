@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,6 +18,7 @@ class SettingsScreen extends StatefulWidget {
   final Function(String) onLanguageChange;
   final ValueNotifier<int>? settingsChangeNotifier;
   final SocketService? socketService;
+  final List<dynamic>? chatMessages;
 
   const SettingsScreen({
     super.key,
@@ -26,6 +28,7 @@ class SettingsScreen extends StatefulWidget {
     required this.onLanguageChange,
     this.settingsChangeNotifier,
     this.socketService,
+    this.chatMessages,
   });
 
   @override
@@ -279,6 +282,84 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _exportChatHistory(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    
+    if (widget.chatMessages == null || widget.chatMessages!.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.noMessagesToExport)),
+      );
+      return;
+    }
+
+    try {
+      final result = await FilePicker.platform.saveFile(
+        dialogTitle: l10n.exportChatHistory,
+        fileName: 'touchfish_chat_${DateTime.now().millisecondsSinceEpoch}.txt',
+        type: FileType.custom,
+        allowedExtensions: ['txt'],
+      );
+
+      if (result == null) return;
+      final buffer = StringBuffer();
+      for (final msg in widget.chatMessages!) {
+        final timestamp = msg.timestamp as DateTime;
+        final timeStr = '${timestamp.year.toString().padLeft(4, '0')}/'
+            '${timestamp.month.toString().padLeft(2, '0')}/'
+            '${timestamp.day.toString().padLeft(2, '0')} '
+            '${timestamp.hour.toString().padLeft(2, '0')}:'
+            '${timestamp.minute.toString().padLeft(2, '0')}:'
+            '${timestamp.second.toString().padLeft(2, '0')}';
+
+        final msgType = msg.type.toString().split('.').last;
+        
+        if (msgType == 'userMessage') {
+          buffer.writeln('[$timeStr] ${msg.sender}: ${msg.content}');
+        } else {
+          String content = msg.content;
+          if (content == 'user_joined' && msg.args.isNotEmpty) {
+            content = l10n.userJoined(msg.args[0]);
+          } else if (content == 'file_received' && msg.args.isNotEmpty) {
+            content = l10n.fileReceived(msg.args[0]);
+          } else if (content == 'file_saved' && msg.args.isNotEmpty) {
+            content = l10n.fileSaved(msg.args[0]);
+          } else if (content == 'receiving_file' && msg.args.isNotEmpty) {
+            content = l10n.receivingFile(msg.args[0]);
+          } else if (content == 'disconnected_from_server') {
+            content = l10n.disconnectedFromServer;
+          }
+          
+          buffer.writeln('[$timeStr] $content');
+        }
+      }
+      final file = File(result);
+      await file.writeAsString(buffer.toString(), encoding: utf8);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.exportedTo(result)),
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: l10n.openFile,
+            onPressed: () async {
+              try {
+                final uri = Uri.file(result);
+                await launchUrl(uri);
+              } catch (_) {}
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${l10n.exportFailed}: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -349,6 +430,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   : null,
             ),
           ),
+        const SizedBox(height: 16),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.file_download),
+            title: Text(l10n.exportChatHistory),
+            subtitle: Text(l10n.exportChatHint),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _exportChatHistory(context),
+          ),
+        ),
         const SizedBox(height: 24),
         Text(
           l10n.chatSettings,

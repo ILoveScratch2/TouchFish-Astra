@@ -37,6 +37,7 @@ class _MainNavigationState extends State<MainNavigation> {
   late final AdminScreen _adminScreen;
   late final ChatScreen _chatScreen;
   final _settingsChangeNotifier = ValueNotifier<int>(0);
+  final _chatMessages = <dynamic>[]; // 存储聊天消息用于导出
 
   @override
   void initState() {
@@ -46,6 +47,10 @@ class _MainNavigationState extends State<MainNavigation> {
       socket: widget.socket,
       username: widget.username,
       settingsChangeNotifier: _settingsChangeNotifier,
+      onMessagesChanged: (messages) {
+        _chatMessages.clear();
+        _chatMessages.addAll(messages);
+      },
     );
     
     _adminScreen = AdminScreen(socket: widget.socket);
@@ -75,6 +80,7 @@ class _MainNavigationState extends State<MainNavigation> {
           onLanguageChange: widget.onLanguageChange,
           settingsChangeNotifier: _settingsChangeNotifier,
           socketService: widget.socket,
+          chatMessages: _chatMessages,
         ),
       ],
     );

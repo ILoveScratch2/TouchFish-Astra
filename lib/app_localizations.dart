@@ -232,6 +232,20 @@ class AppLocalizations {
       'en': 'Enter minimum send times',
     },
     'admin_set_option': {'zh': '配置选项', 'en': 'Configuration Option'},
+    
+    // 导出聊天记录
+    'export_chat_history': {'zh': '导出聊天记录', 'en': 'Export Chat History'},
+    'export_chat_hint': {
+      'zh': '导出当前会话的所有消息为TXT文件',
+      'en': 'Export all messages of current session to TXT file',
+    },
+    'export_success': {'zh': '导出成功', 'en': 'Export Success'},
+    'export_failed': {'zh': '导出失败', 'en': 'Export Failed'},
+    'exported_to': {'zh': '已导出到: {0}', 'en': 'Exported to: {0}'},
+    'no_messages_to_export': {
+      'zh': '当前会话没有消息可导出',
+      'en': 'No messages to export in current session',
+    },
   };
 
   String translate(String key, [List<String> args = const []]) {
@@ -338,6 +352,14 @@ class AppLocalizations {
   String get confirmDisconnect => translate('confirm_disconnect');
   String get confirmDisconnectMessage => translate('confirm_disconnect_message');
   String get disconnect => translate('disconnect');
+
+  // 导出聊天记录
+  String get exportChatHistory => translate('export_chat_history');
+  String get exportChatHint => translate('export_chat_hint');
+  String get exportSuccess => translate('export_success');
+  String get exportFailed => translate('export_failed');
+  String exportedTo(String path) => translate('exported_to', [path]);
+  String get noMessagesToExport => translate('no_messages_to_export');
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

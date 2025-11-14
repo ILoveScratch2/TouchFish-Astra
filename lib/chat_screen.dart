@@ -17,12 +17,14 @@ class ChatScreen extends StatefulWidget {
   final SocketService socket;
   final String username;
   final ValueNotifier<int>? settingsChangeNotifier;
+  final Function(List<ChatMessage>)? onMessagesChanged;
 
   const ChatScreen({
     super.key,
     required this.socket,
     required this.username,
     this.settingsChangeNotifier,
+    this.onMessagesChanged,
   });
 
   @override
@@ -42,6 +44,10 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _autoScroll = true;
   bool _isConnected = true;
 
+  List<ChatMessage> get chatMessages => _messages
+      .map((msg) => ChatMessage.fromSocketMessage(msg, widget.username))
+      .toList();
+
   @override
   void initState() {
     super.initState();
@@ -55,6 +61,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (_autoScroll) {
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollDown());
       }
+      widget.onMessagesChanged?.call(chatMessages);
     });
     _connectionSubscription = widget.socket.connectionStatus.listen((
       connected,
