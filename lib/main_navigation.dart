@@ -37,7 +37,7 @@ class _MainNavigationState extends State<MainNavigation> {
   late final AdminScreen _adminScreen;
   late final ChatScreen _chatScreen;
   final _settingsChangeNotifier = ValueNotifier<int>(0);
-  final _chatMessages = <dynamic>[]; // 存储聊天消息用于导出
+  final _chatMessages = <dynamic>[];
 
   @override
   void initState() {
