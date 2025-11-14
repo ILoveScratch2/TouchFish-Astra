@@ -36,13 +36,11 @@ class _ChatScreenState extends State<ChatScreen> {
   final _scrollController = ScrollController();
   final _messages = <SocketMessage>[];
   StreamSubscription<SocketMessage>? _subscription;
-  StreamSubscription<bool>? _connectionSubscription;
   ChatViewMode _viewMode = ChatViewMode.bubble;
   ChatColors? _colors;
   bool _markdownEnabled = true;
   bool _enterToSend = true;
   bool _autoScroll = true;
-  bool _isConnected = true;
 
   List<ChatMessage> get chatMessages => _messages
       .map((msg) => ChatMessage.fromSocketMessage(msg, widget.username))
@@ -63,13 +61,8 @@ class _ChatScreenState extends State<ChatScreen> {
       }
       widget.onMessagesChanged?.call(chatMessages);
     });
-    _connectionSubscription = widget.socket.connectionStatus.listen((
-      connected,
-    ) {
+    widget.socket.connectionStatus.listen((connected) {
       if (!mounted) return;
-      setState(() {
-        _isConnected = connected;
-      });
       if (!connected) {
         _showDisconnectionDialog();
       }
@@ -128,10 +121,24 @@ class _ChatScreenState extends State<ChatScreen> {
       builder: (dialogContext) => WillPopScope(
         onWillPop: () async => false,
         child: AlertDialog(
-          title: Text(l10n.connectionLost),
-          content: Text(l10n.disconnectedFromServer),
+          icon: Icon(
+            Icons.warning_rounded,
+            color: Theme.of(dialogContext).colorScheme.error,
+            size: 48,
+          ),
+          title: Text(
+            l10n.connectionLost,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            l10n.disconnectedFromServer,
+            style: const TextStyle(fontSize: 16),
+          ),
           actions: [
-            TextButton(
+            FilledButton(
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
@@ -147,7 +154,6 @@ class _ChatScreenState extends State<ChatScreen> {
   void dispose() {
     widget.settingsChangeNotifier?.removeListener(_onSettingsChanged);
     _subscription?.cancel();
-    _connectionSubscription?.cancel();
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -317,27 +323,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Column(
       children: [
-        if (!_isConnected)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-            color: Colors.red.shade900,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.signal_wifi_off,
-                  size: 16,
-                  color: Colors.white,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.disconnectedFromServer,
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
         Expanded(
           child: _viewMode == ChatViewMode.bubble
               ? _buildBubbleView(chatMessages, colors, l10n)

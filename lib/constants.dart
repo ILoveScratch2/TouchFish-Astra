@@ -8,8 +8,8 @@ class AppConstants {
 
   // 项目信息
   static const String description =
-      'A cross-platform TouchFish client built with Flutter';
-  static const String descriptionZh = '基于 Flutter 构建的跨平台TouchFish客户端';
+      'A modern, cross-platform TouchFish client built with Flutter.\n\nTouchFishAstra is Copyleft free software: you are free to use, study, share, and improve it at any time.';
+  static const String descriptionZh = '基于 Flutter 构建的现代化跨平台 TouchFish 客户端\n\nTouchFishAstra 是 Copyleft 的自由软件:您可以随时使用、研究共享和改进它。';
   static const String githubUrl =
       'https://github.com/ILoveScratch2/TouchFishAstra';
   static const String license = 'Copyright (c) 2025 ILoveScratch2. Licensed under AGPL-3.0 License.';

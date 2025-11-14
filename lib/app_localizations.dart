@@ -71,11 +71,10 @@ class AppLocalizations {
 
     // 连接状态
     'disconnected_from_server': {
-      'zh': '[系统提示] 与服务器的连接已断开',
-      'en': '[System] Disconnected from server',
+      'zh': '与服务器的连接已断开',
+      'en': 'Disconnected from server',
     },
     'connection_lost': {'zh': '连接已断开', 'en': 'Connection Lost'},
-    'reconnecting': {'zh': '重新连接中...', 'en': 'Reconnecting...'},
 
     // 文件对话框
     'file_saved_title': {'zh': '文件已保存', 'en': 'File Saved'},
@@ -304,7 +303,6 @@ class AppLocalizations {
   // 连接状态
   String get disconnectedFromServer => translate('disconnected_from_server');
   String get connectionLost => translate('connection_lost');
-  String get reconnecting => translate('reconnecting');
 
   // 文件对话框
   String get fileSavedTitle => translate('file_saved_title');
