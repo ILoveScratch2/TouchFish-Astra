@@ -294,14 +294,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
 
     try {
-      final result = await FilePicker.platform.saveFile(
-        dialogTitle: l10n.exportChatHistory,
-        fileName: 'touchfish_chat_${DateTime.now().millisecondsSinceEpoch}.txt',
-        type: FileType.custom,
-        allowedExtensions: ['txt'],
-      );
-
-      if (result == null) return;
       final buffer = StringBuffer();
       for (final msg in widget.chatMessages!) {
         final timestamp = msg.timestamp as DateTime;
@@ -333,25 +325,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
           buffer.writeln('[$timeStr] $content');
         }
       }
-      final file = File(result);
-      await file.writeAsString(buffer.toString(), encoding: utf8);
 
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.exportedTo(result)),
-          duration: const Duration(seconds: 3),
-          action: SnackBarAction(
-            label: l10n.openFile,
-            onPressed: () async {
-              try {
-                final uri = Uri.file(result);
-                await launchUrl(uri);
-              } catch (_) {}
-            },
+      final content = buffer.toString();
+      final fileName = 'touchfish_chat_${DateTime.now().millisecondsSinceEpoch}.txt';
+      if (Platform.isAndroid || Platform.isIOS) {
+        final bytes = utf8.encode(content);
+        final result = await FilePicker.platform.saveFile(
+          dialogTitle: l10n.exportChatHistory,
+          fileName: fileName,
+          type: FileType.custom,
+          allowedExtensions: ['txt'],
+          bytes: bytes,
+        );
+
+        if (result == null) return;
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.exportedTo(result)),
+            duration: const Duration(seconds: 3),
           ),
-        ),
-      );
+        );
+      } else {
+        final result = await FilePicker.platform.saveFile(
+          dialogTitle: l10n.exportChatHistory,
+          fileName: fileName,
+          type: FileType.custom,
+          allowedExtensions: ['txt'],
+        );
+
+        if (result == null) return;
+
+        final file = File(result);
+        await file.writeAsString(content, encoding: utf8);
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.exportedTo(result)),
+            duration: const Duration(seconds: 3),
+            action: SnackBarAction(
+              label: l10n.openFile,
+              onPressed: () async {
+                try {
+                  final uri = Uri.file(result);
+                  await launchUrl(uri);
+                } catch (_) {}
+              },
+            ),
+          ),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
