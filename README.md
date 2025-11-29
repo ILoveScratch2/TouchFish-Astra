@@ -4,6 +4,19 @@
 
 <center>一个跨平台的TouchFish客户端</center>
 
+
+> [!IMPORTANT]  
+> 由于 TouchFish 已进入V4公共测试版本，本项目将暂时停止主要功能更新，并尝试适配 TouchFish V4 协议（TouchFish Protocol 2.0）。
+> TouchFish V4 正式版发布后，本项目将继续进行常规更新。 新版本将不再会支持 TouchFish V3 及以下版本的协议，如有需求请使用`v1.0.1`及更低版本。
+>
+> 适配 TouchFish V4 后，预计将支持更多功能：
+> - 多行消息支持
+> - Web 端 支持（基于新WebSocket协议）
+> - 更稳定的连接和更可控的文件传输
+> - 以及更多新功能（根据 V4 开发进度，可能会有变动，不保证以上内容全部完整实现）
+> 敬请期待！
+
+
 ## 简介
 
 在洛谷上看到了[TouchFish的相关内容](https://github.com/2044-space-elevator/TouchFish)，~~非常适合摸鱼~~
