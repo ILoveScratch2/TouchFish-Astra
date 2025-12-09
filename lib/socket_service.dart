@@ -2,26 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-enum _FileTransferState { none, receiving }
 
 class SocketMessage {
-  final String type; // 'text', 'file_status', 'user_join'
-  final String content;
-  final Map<String, dynamic>? metadata;
+  final Map<String, dynamic> data;
 
-  SocketMessage(this.type, this.content, [this.metadata]);
+  SocketMessage(this.data);
 
-  factory SocketMessage.text(String text) => SocketMessage('text', text);
-
-  factory SocketMessage.userJoin(String username) =>
-      SocketMessage('user_join', username);
-
-  factory SocketMessage.fileStatus(String statusKey, [List<String>? args]) =>
-      SocketMessage('file_status', statusKey, {'args': args ?? []});
+  String get type => data['type'] as String? ?? '';
+  
+  factory SocketMessage.fromJson(Map<String, dynamic> json) => SocketMessage(json);
 }
 
 class SocketService {
@@ -30,146 +19,49 @@ class SocketService {
   final _messageController = StreamController<SocketMessage>.broadcast();
   final _connectionController = StreamController<bool>.broadcast();
   final _buffer = <int>[];
-  Map<String, dynamic>? serverInfo;
-
-  _FileTransferState _fileState = _FileTransferState.none;
-  String? _currentFilename;
-  int? _currentFileSize;
-  final List<String> _fileDataChunks = [];
+  
+  int? myUid;
+  String? myUsername;
+  Map<String, dynamic>? serverConfig;
+  List<Map<String, dynamic>>? users;
 
   Stream<SocketMessage> get messages => _messageController.stream;
   Stream<bool> get connectionStatus => _connectionController.stream;
   bool get isConnected => _socket != null;
 
-  Future<void> _saveReceivedFile(String filename, List<String> chunks) async {
-    if (_messageController.isClosed) return;
-    
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final autoSave = prefs.getBool('auto_save_files') ?? true;
-
-      if (!autoSave) {
-        _messageController.add(
-          SocketMessage.fileStatus('file_received', [filename]),
-        );
-        return;
-      }
-
-      final List<int> bytes = [];
-      for (final chunk in chunks) {
-        bytes.addAll(base64Decode(chunk));
-      }
-
-      if (_currentFileSize != null && bytes.length != _currentFileSize) {
-        _messageController.add(SocketMessage.fileStatus('file_size_mismatch'));
-      }
-
-      String? downloadPath = prefs.getString('download_path');
-      Directory? directory;
-
-      if (downloadPath != null && downloadPath.isNotEmpty) {
-        directory = Directory(downloadPath);
-        if (!directory.existsSync()) {
-          try {
-            directory.createSync(recursive: true);
-          } catch (e) {
-            _messageController.add(
-              SocketMessage.fileStatus('cannot_create_dir', ['$e']),
-            );
-            downloadPath = null;
-          }
-        }
-      }
-
-      if (downloadPath == null || downloadPath.isEmpty) {
-        if (Platform.isAndroid) {
-          directory = await getExternalStorageDirectory();
-        } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-          directory = await getDownloadsDirectory();
-        }
-      }
-
-      if (directory == null) {
-        _messageController.add(SocketMessage.fileStatus('cannot_get_dir'));
-        return;
-      }
-
-      var filePath = path.join(directory.path, filename);
-      var counter = 1;
-      while (File(filePath).existsSync()) {
-        final extension = path.extension(filename);
-        final nameWithoutExt = path.basenameWithoutExtension(filename);
-        if (extension.isNotEmpty) {
-          filePath = path.join(
-            directory.path,
-            '$nameWithoutExt($counter)$extension',
-          );
-        } else {
-          filePath = path.join(directory.path, '$filename($counter)');
-        }
-        counter++;
-      }
-
-      final file = File(filePath);
-      await file.writeAsBytes(bytes);
-
-      _messageController.add(
-        SocketMessage.fileStatus('file_saved', [file.path]),
-      );
-    } catch (e) {
-      _messageController.add(
-        SocketMessage.fileStatus('file_save_failed', ['$e']),
-      );
-    }
-  }
-
   Future<bool> connect(String ip, int port, String username) async {
     try {
       _socket = await Socket.connect(ip, port);
-      try {
-        _socket!.setOption(SocketOption.tcpNoDelay, true);
-        if (Platform.isWindows) {
-          _socket!.setRawOption(
-            RawSocketOption(
-              0xFFFF, // SOL_SOCKET
-              0x0008, // SO_KEEPALIVE
-              Uint8List.fromList([1, 0, 0, 0]), // TRUE
-            ),
-          );
-        } else {
-          _socket!.setRawOption(
-            RawSocketOption(
-              1, // SOL_SOCKET
-              9, // SO_KEEPALIVE
-              Uint8List.fromList([1, 0, 0, 0]), // TRUE
-            ),
-          );
-          try {
-            // TCP_KEEPIDLE = 180 * 60 = 10800秒
-            final idleBytes = Uint8List(4);
-            final idleValue = 10800;
-            idleBytes[0] = idleValue & 0xFF;
-            idleBytes[1] = (idleValue >> 8) & 0xFF;
-            idleBytes[2] = (idleValue >> 16) & 0xFF;
-            idleBytes[3] = (idleValue >> 24) & 0xFF;
-            _socket!.setRawOption(RawSocketOption(6, 4, idleBytes));
+      _socket!.setOption(SocketOption.tcpNoDelay, true);
+      if (Platform.isWindows) {
+        _socket!.setRawOption(
+          RawSocketOption(0xFFFF, 0x0008, Uint8List.fromList([1, 0, 0, 0])),
+        );
+      } else {
+        _socket!.setRawOption(
+          RawSocketOption(1, 9, Uint8List.fromList([1, 0, 0, 0])),
+        );
+        try {
+          final idleBytes = Uint8List(4)
+            ..[0] = 10800 & 0xFF
+            ..[1] = (10800 >> 8) & 0xFF
+            ..[2] = (10800 >> 16) & 0xFF
+            ..[3] = (10800 >> 24) & 0xFF;
+          _socket!.setRawOption(RawSocketOption(6, 4, idleBytes));
 
-            // TCP_KEEPINTVL = 30
-            final intvlBytes = Uint8List(4);
-            final intvlValue = 30;
-            intvlBytes[0] = intvlValue & 0xFF;
-            intvlBytes[1] = (intvlValue >> 8) & 0xFF;
-            intvlBytes[2] = (intvlValue >> 16) & 0xFF;
-            intvlBytes[3] = (intvlValue >> 24) & 0xFF;
-            _socket!.setRawOption(RawSocketOption(6, 5, intvlBytes));
-          } catch (_) {
-          }
-        }
-      } catch (e) {
+          final intvlBytes = Uint8List(4)
+            ..[0] = 30 & 0xFF
+            ..[1] = (30 >> 8) & 0xFF
+            ..[2] = (30 >> 16) & 0xFF
+            ..[3] = (30 >> 24) & 0xFF;
+          _socket!.setRawOption(RawSocketOption(6, 5, intvlBytes));
+        } catch (_) {}
       }
 
-      _socket!.write('用户 $username 加入聊天室。\n');
-      serverInfo = {'ip': ip, 'port': port, 'username': username};
+      myUsername = username;
+      final request = jsonEncode({'type': 'GATE.REQUEST', 'username': username});
+      _socket!.write('$request\n');
+      
       _connectionController.add(true);
       _listen();
       return true;
@@ -195,7 +87,7 @@ class SocketService {
     if (_socket == null) return;
     if (!_messageController.isClosed) {
       _messageController.add(
-        SocketMessage('connection_lost', 'disconnected_from_server'),
+        SocketMessage({'type': 'CONNECTION_LOST'}),
       );
     }
     disconnect();
@@ -210,78 +102,152 @@ class SocketService {
       _buffer.removeRange(0, idx + 1);
 
       if (line.isEmpty) continue;
-      if (line.startsWith('{') && line.endsWith('}')) {
-        try {
-          final json = jsonDecode(line) as Map<String, dynamic>;
-          final type = json['type'] as String?;
-
-          if (type == '[FILE_START]') {
-            _fileState = _FileTransferState.receiving;
-            _currentFilename = json['name'] as String?;
-            _currentFileSize = json['size'] as int?;
-            _fileDataChunks.clear();
-            final filename = _currentFilename ?? 'unknown';
-            _messageController.add(
-              SocketMessage.fileStatus('receiving_file', [filename]),
-            );
-            continue;
-          } else if (type == '[FILE_DATA]' &&
-              _fileState == _FileTransferState.receiving) {
-            final data = json['data'] as String?;
-            if (data != null) {
-              _fileDataChunks.add(data);
-            }
-            continue;
-          } else if (type == '[FILE_END]' &&
-              _fileState == _FileTransferState.receiving) {
-            final filename = _currentFilename ?? 'unknown';
-
-            await _saveReceivedFile(filename, _fileDataChunks);
-
-            _fileState = _FileTransferState.none;
-            _currentFilename = null;
-            _currentFileSize = null;
-            _fileDataChunks.clear();
-            continue;
+      
+      try {
+        final json = jsonDecode(line) as Map<String, dynamic>;
+        final type = json['type'] as String?;
+        
+        if (type == 'SERVER.DATA') {
+          myUid = json['uid'] as int?;
+          serverConfig = json['config'] as Map<String, dynamic>?;
+          if (serverConfig != null) {
+            serverConfig!['server_version'] = json['server_version'];
           }
-        } catch (_) {
-          continue;
+          final usersList = (json['users'] as List?)?.cast<Map<String, dynamic>>();
+          if (usersList != null) {
+            users = [];
+            for (var i = 0; i < usersList.length; i++) {
+              final user = Map<String, dynamic>.from(usersList[i]);
+              user['uid'] = i;
+              users!.add(user);
+            }
+          }
+
+          final chatHistory = (json['chat_history'] as List?)?.cast<Map<String, dynamic>>();
+          if (chatHistory != null && chatHistory.isNotEmpty) {
+            json['_chat_history'] = chatHistory;
+          }
         }
+
+        if (type == 'GATE.CLIENT_REQUEST.ANNOUNCE') {
+          final username = json['username'] as String?;
+          final uid = json['uid'] as int?;
+          final result = json['result'] as String?;
+          if (username != null && uid != null && users != null) {
+            while (users!.length <= uid) {
+              users!.add({'username': 'Unknown', 'status': 'Offline'});
+            }
+            users![uid]['username'] = username;
+            if (result == 'Accepted') {
+              users![uid]['status'] = 'Online';
+            } else if (result == 'Pending review') {
+              users![uid]['status'] = 'Pending';
+            }
+          }
+        }
+        
+        if (type == 'GATE.STATUS_CHANGE.ANNOUNCE') {
+          final uid = json['uid'] as int?;
+          final status = json['status'] as String?;
+          if (uid != null && status != null && users != null && uid < users!.length) {
+            users![uid]['status'] = status;
+          }
+        }
+        
+        if (type == 'SERVER.CONFIG.CHANGE') {
+          final key = json['key'] as String?;
+          final value = json['value'];
+          if (key != null && serverConfig != null) {
+            final parts = key.split('.');
+            if (parts.length == 2) {
+              final section = parts[0];
+              final field = parts[1];
+              if (serverConfig![section] is Map) {
+                serverConfig![section][field] = value;
+              }
+            }
+          }
+        }
+        
+        _messageController.add(SocketMessage.fromJson(json));
+      } catch (_) {
+        continue;
       }
-
-      _messageController.add(SocketMessage.text(line));
     }
   }
 
-  void send(String username, String message) {
+  void sendMessage(String content, {int to = -1}) {
     if (_socket == null) return;
-    _socket!.write('$username: $message\n');
-  }
-
-  void sendAdmin(String type, String message) {
-    if (_socket == null) return;
-    final json = jsonEncode({'type': type, 'message': message});
-    _socket!.write('$json\n');
-  }
-
-  void sendFile(String filename, Uint8List bytes) {
-    if (_socket == null) return;
-    final start = jsonEncode({
-      'type': '[FILE_START]',
-      'name': filename,
-      'size': bytes.length,
+    final msg = jsonEncode({
+      'type': 'CHAT.SEND',
+      'filename': '',
+      'content': content,
+      'to': to,
     });
-    _socket!.write('$start\n');
+    _socket!.write('$msg\n');
+  }
 
-    for (var i = 0; i < bytes.length; i += 8192) {
-      final end = (i + 8192 < bytes.length) ? i + 8192 : bytes.length;
-      final chunk = base64Encode(bytes.sublist(i, end));
-      final data = jsonEncode({'type': '[FILE_DATA]', 'data': chunk});
-      _socket!.write('$data\n');
-    }
+  void sendFile(String filename, Uint8List bytes, {int to = -1}) {
+    if (_socket == null) return;
+    final content = base64Encode(bytes);
+    final msg = jsonEncode({
+      'type': 'CHAT.SEND',
+      'filename': filename,
+      'content': content,
+      'to': to,
+    });
+    _socket!.write('$msg\n');
+  }
 
-    final endMsg = jsonEncode({'type': '[FILE_END]'});
-    _socket!.write('$endMsg\n');
+  void sendBroadcast(String content) {
+    if (_socket == null) return;
+    final msg = jsonEncode({
+      'type': 'CHAT.SEND',
+      'filename': '',
+      'content': content,
+      'to': -2,
+    });
+    _socket!.write('$msg\n');
+  }
+
+  void kickUser(int uid) {
+    if (_socket == null) return;
+    final msg = jsonEncode({
+      'type': 'GATE.STATUS_CHANGE.REQUEST',
+      'status': 'Kicked',
+      'uid': uid,
+    });
+    _socket!.write('$msg\n');
+  }
+
+  void acceptUser(int uid) {
+    if (_socket == null) return;
+    final msg = jsonEncode({
+      'type': 'GATE.STATUS_CHANGE.REQUEST',
+      'status': 'Online',
+      'uid': uid,
+    });
+    _socket!.write('$msg\n');
+  }
+
+  void rejectUser(int uid) {
+    if (_socket == null) return;
+    final msg = jsonEncode({
+      'type': 'GATE.STATUS_CHANGE.REQUEST',
+      'status': 'Rejected',
+      'uid': uid,
+    });
+    _socket!.write('$msg\n');
+  }
+
+  void updateConfig(String key, dynamic value) {
+    if (_socket == null) return;
+    final msg = jsonEncode({
+      'type': 'SERVER.CONFIG.POST',
+      'key': key,
+      'value': value,
+    });
+    _socket!.write('$msg\n');
   }
 
   void disconnect() {
@@ -294,12 +260,11 @@ class SocketService {
     }
     _socket?.close();
     _socket = null;
-    serverInfo = null;
+    myUid = null;
+    myUsername = null;
+    serverConfig = null;
+    users = null;
     _buffer.clear();
-    _fileState = _FileTransferState.none;
-    _currentFilename = null;
-    _currentFileSize = null;
-    _fileDataChunks.clear();
   }
 
   void dispose() {

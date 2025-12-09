@@ -1,4 +1,4 @@
-package org.dpdns.ilovescratch.tfastra
+package org.dpdns.ilovescratch.tfastra.v4
 
 import io.flutter.embedding.android.FlutterActivity
 

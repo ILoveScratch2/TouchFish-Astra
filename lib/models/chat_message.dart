@@ -1,135 +1,69 @@
-import 'dart:typed_data';
 import '../socket_service.dart';
 
-enum MessageType { userMessage, systemMessage, fileTransfer }
+enum MessageType { chat, gateRequest, gateStatus, gateClientRequest, serverConfig, file, system }
 
 class ChatMessage {
   final MessageType type;
-  final String sender;
-  final String content;
-  final List<String> args; // 翻译参数
-  final bool isMine;
+  final Map<String, dynamic> rawData;
   final DateTime timestamp;
-  final FileTransferInfo? fileInfo;
-  final String? filePath;
 
   ChatMessage({
     required this.type,
-    required this.sender,
-    required this.content,
-    required this.isMine,
-    this.args = const [],
+    required this.rawData,
     DateTime? timestamp,
-    this.fileInfo,
-    this.filePath,
   }) : timestamp = timestamp ?? DateTime.now();
 
-  factory ChatMessage.fromSocketMessage(SocketMessage msg, String myUsername) {
-    switch (msg.type) {
-      case 'connection_lost':
-        return ChatMessage(
-          type: MessageType.systemMessage,
-          sender: 'system',
-          content: msg.content, // 'disconnected_from_server'
-          isMine: false,
-        );
-
-      case 'file_status':
-        final args = (msg.metadata?['args'] as List?)?.cast<String>() ?? [];
-        String? filePath;
-        if (msg.content == 'file_saved' && args.isNotEmpty) {
-          filePath = args[0];
-        }
-
-        return ChatMessage(
-          type: MessageType.fileTransfer,
-          sender: 'system',
-          content: msg.content,
-          args: args,
-          isMine: false,
-          filePath: filePath,
-        );
-
-      case 'user_join':
-        return ChatMessage(
-          type: MessageType.systemMessage,
-          sender: 'system',
-          content: 'user_joined',
-          args: [msg.content],
-          isMine: false,
-        );
-
-      case 'text':
-      default:
-        return ChatMessage._parseText(msg.content, myUsername);
+  factory ChatMessage.fromSocketMessage(SocketMessage msg, int? myUid) {
+    final type = msg.type;
+    
+    if (type.startsWith('CHAT.')) {
+      return ChatMessage(type: MessageType.chat, rawData: msg.data);
     }
+    if (type == 'GATE.CLIENT_REQUEST.ANNOUNCE') {
+      return ChatMessage(type: MessageType.gateClientRequest, rawData: msg.data);
+    }
+    if (type.startsWith('GATE.STATUS_CHANGE')) {
+      return ChatMessage(type: MessageType.gateStatus, rawData: msg.data);
+    }
+    if (type.startsWith('GATE.')) {
+      return ChatMessage(type: MessageType.gateRequest, rawData: msg.data);
+    }
+    if (type.startsWith('SERVER.CONFIG')) {
+      return ChatMessage(type: MessageType.serverConfig, rawData: msg.data);
+    }
+    if (type.startsWith('SERVER.')) {
+      return ChatMessage(type: MessageType.system, rawData: msg.data);
+    }
+    
+    return ChatMessage(type: MessageType.system, rawData: msg.data);
   }
-
-  factory ChatMessage._parseText(String raw, String myUsername) {
-    final trimmed = raw.trim();
-    if (trimmed.isEmpty) {
-      return ChatMessage(
-        type: MessageType.systemMessage,
-        sender: 'system',
-        content: '',
-        isMine: false,
-      );
-    }
-
-    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
-      return ChatMessage(
-        type: MessageType.systemMessage,
-        sender: 'system',
-        content: trimmed,
-        isMine: false,
-      );
-    }
-
-    final broadcastPattern = RegExp(r'^\[.+?广播\]\s');
-    if (broadcastPattern.hasMatch(trimmed)) {
-      return ChatMessage(
-        type: MessageType.systemMessage,
-        sender: 'system',
-        content: trimmed,
-        isMine: false,
-      );
-    }
-    final systemPattern = RegExp(r'^\[.+?提示\]\s');
-    if (systemPattern.hasMatch(trimmed)) {
-      return ChatMessage(
-        type: MessageType.systemMessage,
-        sender: 'system',
-        content: trimmed,
-        isMine: false,
-      );
-    }
-
-    if (trimmed.contains(':')) {
-      final colonIndex = trimmed.indexOf(':');
-      final sender = trimmed.substring(0, colonIndex).trim();
-      final content = trimmed.substring(colonIndex + 1).trim();
-
-      return ChatMessage(
-        type: MessageType.userMessage,
-        sender: sender,
-        content: content,
-        isMine: sender == myUsername,
-      );
-    }
-
-    return ChatMessage(
-      type: MessageType.systemMessage,
-      sender: 'system',
-      content: trimmed,
-      isMine: false,
-    );
+  String? get content => rawData['content'] as String?;
+  int? get from => rawData['from'] as int?;
+  int? get to => rawData['to'] as int?;
+  String? get filename => rawData['filename'] as String?;
+  int? get uid => rawData['uid'] as int?;
+  String? get username => rawData['username'] as String?;
+  String? get status => rawData['status'] as String?;
+  String? get result => rawData['result'] as String?;
+  int? get operator => rawData['operator'] as int?;
+  
+  bool get isFile => filename != null && filename!.isNotEmpty;
+  
+  bool isMine(int? myUid) {
+    if (myUid == null) return false;
+    return from == myUid;
   }
-}
-
-class FileTransferInfo {
-  final String filename;
-  final int size;
-  final Uint8List? data;
-
-  FileTransferInfo({required this.filename, required this.size, this.data});
+  
+  bool isToMe(int? myUid) {
+    if (myUid == null) return false;
+    return to == myUid;
+  }
+  
+  bool get isBroadcast => to == -2;
+  bool get isPrivate => to != null && to! >= 0;
+  
+  String getFileContent() {
+    if (!isFile) return '';
+    return content ?? '';
+  }
 }

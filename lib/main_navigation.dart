@@ -61,6 +61,70 @@ class _MainNavigationState extends State<MainNavigation> {
     _settingsChangeNotifier.dispose();
     super.dispose();
   }
+  
+  void _showServerInfo() {
+    final l10n = AppLocalizations.of(context);
+    
+    showDialog(
+      context: context,
+      builder: (context) {
+        final serverVersion = widget.socket.serverConfig?['server_version'] ?? 'unknown';
+        final serverConfig = widget.socket.serverConfig;
+        final maxConnections = serverConfig?['general']?['max_connections'] ?? 0;
+        final users = widget.socket.users ?? [];
+        final onlineCount = users.where((u) {
+          final status = u['status'] as String?;
+          return status == 'Online' || status == 'Admin' || status == 'Root';
+        }).length;
+          
+          return AlertDialog(
+            title: Text(l10n.serverInfo),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${l10n.serverVersionLabel}: $serverVersion'),
+                  const SizedBox(height: 8),
+                  Text('${l10n.myUid}: ${widget.socket.myUid}'),
+                  const SizedBox(height: 8),
+                  Text('${l10n.translate('online_users')}: $onlineCount / $maxConnections'),
+                  const Divider(),
+                  Text(l10n.userList, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Flexible(
+                    child: users.isEmpty
+                        ? const Text('No users')
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: users.length,
+                            itemBuilder: (context, index) {
+                              final user = users[index];
+                              final username = user['username'] ?? 'Unknown';
+                              final uid = user['uid'] ?? -1;
+                              final status = user['status'] ?? 'Unknown';
+                              return ListTile(
+                                dense: true,
+                                title: Text(username),
+                                subtitle: Text('${l10n.uid}: $uid - ${l10n.status}: $status'),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.close),
+              ),
+            ],
+          );
+      },
+    );
+  }
 
   bool get _isDesktop {
     if (kIsWeb) return false;
@@ -107,6 +171,17 @@ class _MainNavigationState extends State<MainNavigation> {
               children: [
                 const Divider(),
                 const SizedBox(height: 8),
+                IconButton(
+                  icon: const Icon(Icons.info_outline, size: 24),
+                  onPressed: _showServerInfo,
+                  tooltip: l10n.serverInfo,
+                ),
+                Text(
+                  l10n.serverInfo,
+                  style: Theme.of(context).textTheme.labelSmall,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
                 IconButton(
                   icon: Icon(
                     _currentTab == NavigationTab.settings
@@ -238,6 +313,23 @@ class _MainNavigationState extends State<MainNavigation> {
           },
         ),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: _currentTab == NavigationTab.chat
+            ? [
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'server_info') {
+                      _showServerInfo();
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'server_info',
+                      child: Text(l10n.serverInfo),
+                    ),
+                  ],
+                ),
+              ]
+            : null,
       ),
       drawer: _buildDrawer(),
       body: _buildContent(),

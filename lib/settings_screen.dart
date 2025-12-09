@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'app_localizations.dart';
 import 'constants.dart';
 import 'models/chat_colors.dart';
+import 'models/chat_message.dart';
 import 'chat_screen.dart';
 import 'socket_service.dart';
 
@@ -44,6 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _enterToSend = true;
   bool _autoScroll = true;
   bool _enableNotifications = false;
+  bool _loadChatHistory = false;
 
   @override
   void initState() {
@@ -70,12 +72,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     setState(() {
       _viewMode = ChatViewMode.values[prefs.getInt('chat_view_mode') ?? 1];
-      _autoSaveFiles = prefs.getBool('auto_save_files') ?? true;
+      _autoSaveFiles = prefs.getBool('auto_save_files') ?? false;
       _downloadPath = prefs.getString('download_path') ?? defaultPath;
       _markdownRendering = prefs.getBool('markdown_rendering') ?? true;
       _enterToSend = prefs.getBool('enter_to_send') ?? true;
       _autoScroll = prefs.getBool('auto_scroll') ?? true;
       _enableNotifications = prefs.getBool('enable_notifications') ?? false;
+      _loadChatHistory = prefs.getBool('load_chat_history') ?? false;
     });
   }
 
@@ -357,8 +360,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     try {
       final buffer = StringBuffer();
+      final users = widget.socketService?.users;
+      
       for (final msg in widget.chatMessages!) {
-        final timestamp = msg.timestamp as DateTime;
+        final timestamp = msg.timestamp;
         final timeStr = '${timestamp.year.toString().padLeft(4, '0')}/'
             '${timestamp.month.toString().padLeft(2, '0')}/'
             '${timestamp.day.toString().padLeft(2, '0')} '
@@ -366,25 +371,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
             '${timestamp.minute.toString().padLeft(2, '0')}:'
             '${timestamp.second.toString().padLeft(2, '0')}';
 
-        final msgType = msg.type.toString().split('.').last;
+        final msgType = msg.type;
         
-        if (msgType == 'userMessage') {
-          buffer.writeln('[$timeStr] ${msg.sender}: ${msg.content}');
-        } else {
-          String content = msg.content;
-          if (content == 'user_joined' && msg.args.isNotEmpty) {
-            content = l10n.userJoined(msg.args[0]);
-          } else if (content == 'file_received' && msg.args.isNotEmpty) {
-            content = l10n.fileReceived(msg.args[0]);
-          } else if (content == 'file_saved' && msg.args.isNotEmpty) {
-            content = l10n.fileSaved(msg.args[0]);
-          } else if (content == 'receiving_file' && msg.args.isNotEmpty) {
-            content = l10n.receivingFile(msg.args[0]);
-          } else if (content == 'disconnected_from_server') {
-            content = l10n.disconnectedFromServer;
+        if (msgType == MessageType.chat) {
+          String username = msg.username ?? 'Unknown';
+          if (username == 'Unknown' && msg.from != null && users != null && msg.from! < users.length) {
+            username = users[msg.from!]['username'] as String? ?? 'Unknown';
           }
           
-          buffer.writeln('[$timeStr] $content');
+          if (msg.isFile) {
+            buffer.writeln('[$timeStr] $username: [FILE] ${msg.filename}');
+          } else {
+            buffer.writeln('[$timeStr] $username: ${msg.content ?? ""}');
+          }
+        } else if (msgType == MessageType.gateClientRequest) {
+          final username = msg.username ?? 'Unknown';
+          final uid = msg.uid ?? -1;
+          final result = msg.result ?? 'Unknown';
+          buffer.writeln('[$timeStr] [${l10n.translate('join_request')}] $username (UID: $uid) - $result');
+        } else if (msgType == MessageType.gateStatus) {
+          final uid = msg.uid ?? -1;
+          final status = msg.status ?? 'Unknown';
+          buffer.writeln('[$timeStr] [${l10n.translate('status_change')}] UID $uid -> $status');
+        } else if (msgType == MessageType.serverConfig) {
+          final key = msg.rawData['key'] as String? ?? 'unknown';
+          final value = msg.rawData['value'];
+          buffer.writeln('[$timeStr] [${l10n.translate('config_change')}] $key = $value');
+        } else {
+          final content = msg.content ?? msg.rawData.toString();
+          buffer.writeln('[$timeStr] [${l10n.translate('system')}] $content');
         }
       }
 
@@ -642,6 +657,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
               const Divider(height: 1),
+              SwitchListTile(
+                secondary: const Icon(Icons.history),
+                title: Text(l10n.loadChatHistory),
+                subtitle: Text(l10n.loadChatHistoryHint),
+                value: _loadChatHistory,
+                onChanged: (value) async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('load_chat_history', value);
+                  setState(() {
+                    _loadChatHistory = value;
+                  });
+                  widget.settingsChangeNotifier?.value++;
+                },
+              ),
+              const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.folder),
                 title: Text(l10n.downloadPath),
@@ -781,6 +811,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     colors.banNotification,
                     (color) async {
                       final newColors = colors.copyWith(banNotification: color);
+                      await newColors.save();
+                      await _loadColors();
+                    },
+                  );
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.lock, color: Colors.green),
+                title: Text(l10n.otherPrivateColor),
+                trailing: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: colors.privateBubble,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.grey),
+                  ),
+                ),
+                onTap: () async {
+                  await _pickColor(
+                    context,
+                    l10n.pickOtherPrivateColor,
+                    colors.privateBubble,
+                    (color) async {
+                      final newColors = colors.copyWith(privateBubble: color);
+                      await newColors.save();
+                      await _loadColors();
+                    },
+                  );
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.lock, color: Colors.purple),
+                title: Text(l10n.myPrivateColor),
+                trailing: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: colors.myPrivateBubble,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.grey),
+                  ),
+                ),
+                onTap: () async {
+                  await _pickColor(
+                    context,
+                    l10n.pickMyPrivateColor,
+                    colors.myPrivateBubble,
+                    (color) async {
+                      final newColors = colors.copyWith(myPrivateBubble: color);
                       await newColors.save();
                       await _loadColors();
                     },

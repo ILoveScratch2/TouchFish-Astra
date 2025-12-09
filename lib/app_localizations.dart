@@ -123,10 +123,14 @@ class AppLocalizations {
       'en': 'System Message/Announcement Color',
     },
     'ban_color': {'zh': '封禁提醒颜色', 'en': 'Ban Notification Color'},
+    'other_private_color': {'zh': '对方私聊颜色', 'en': 'Other Private Message Color'},
+    'my_private_color': {'zh': '我的私聊颜色', 'en': 'My Private Message Color'},
     'pick_my_color': {'zh': '选择我的消息颜色', 'en': 'Pick My Message Color'},
     'pick_other_color': {'zh': '选择对方消息颜色', 'en': 'Pick Other Message Color'},
     'pick_system_color': {'zh': '选择系统消息颜色', 'en': 'Pick System Message Color'},
     'pick_ban_color': {'zh': '选择封禁提醒颜色', 'en': 'Pick Ban Notification Color'},
+    'pick_other_private_color': {'zh': '选择对方私聊颜色', 'en': 'Pick Other Private Message Color'},
+    'pick_my_private_color': {'zh': '选择我的私聊颜色', 'en': 'Pick My Private Message Color'},
     'markdown_rendering': {
       'zh': 'Markdown/LaTeX渲染',
       'en': 'Markdown/LaTeX Rendering',
@@ -148,8 +152,13 @@ class AppLocalizations {
     },
     'enable_notifications': {'zh': '启用消息通知', 'en': 'Enable Notifications'},
     'notifications_hint': {
-      'zh': '收到新消息时显示系统通知',
+      'zh': '接收新消息时显示系统通知',
       'en': 'Show system notifications for new messages',
+    },
+    'load_chat_history': {'zh': '恢复聊天历史', 'en': 'Load Chat History'},
+    'load_chat_history_hint': {
+      'zh': '连接时自动加载上线前的公共聊天记录',
+      'en': 'Auto-load public chat history from before connection',
     },
     'disconnect_from_server': {'zh': '断开与服务器的连接', 'en': 'Disconnect from Server'},
     'confirm_disconnect': {
@@ -168,7 +177,7 @@ class AppLocalizations {
       'zh': '输入要广播的消息内容',
       'en': 'Enter message to broadcast',
     },
-    'admin_ban': {'zh': '封禁用户', 'en': 'Ban User'},
+    'admin_ban': {'zh': '封禁', 'en': 'Ban'},
     'admin_ban_hint': {'zh': '输入要封禁的IP', 'en': 'Enter IP to ban'},
     'admin_enable': {'zh': '解封用户', 'en': 'Unban User'},
     'admin_enable_hint': {'zh': '输入要解封的IP', 'en': 'Enter IP to unban'},
@@ -205,10 +214,28 @@ class AppLocalizations {
       'en': 'Connection failed: unauthorized or invalid port',
     },
     'admin_unauthorized': {
-      'zh':
-          '无管理员权限或端口错误\n请检查：1. 服务端是否执行了 "admin on"\n2. 端口号是否正确\n3. 您的IP是否在管理员列表',
-      'en':
-          'Unauthorized or invalid port\nCheck: 1. Server executed "admin on"\n2. Port number is correct\n3. Your IP is in admin list',
+      'zh': '无管理员权限',
+      'en': 'Unauthorized - Admin Permission Required',
+    },
+    'admin_need_permission': {
+      'zh': '您需要Admin或Root权限才能使用管理员功能',
+      'en': 'You need Admin or Root permission to use admin features',
+    },
+    'admin_pending_requests': {
+      'zh': '待审核用户',
+      'en': 'Pending Requests',
+    },
+    'admin_online_users': {
+      'zh': '在线用户',
+      'en': 'Online Users',
+    },
+    'admin_no_online_users': {
+      'zh': '暂无其他在线用户',
+      'en': 'No other online users',
+    },
+    'admin_kick': {
+      'zh': '踢出',
+      'en': 'Kick',
     },
     'admin_status_connected': {
       'zh': '已连接到管理员控制台',
@@ -231,6 +258,26 @@ class AppLocalizations {
       'en': 'Enter minimum send times',
     },
     'admin_set_option': {'zh': '配置选项', 'en': 'Configuration Option'},
+    'admin_actions': {'zh': '管理操作', 'en': 'Admin Actions'},
+    'admin_broadcast_sent': {'zh': '广播消息已发送', 'en': 'Broadcast sent'},
+    'admin_config': {'zh': '服务器配置', 'en': 'Server Configuration'},
+    'admin_config_key': {'zh': '配置项', 'en': 'Config Key'},
+    'admin_config_value': {'zh': '配置值', 'en': 'Config Value'},
+    'admin_config_updated': {'zh': '配置已更新', 'en': 'Config updated'},
+    'admin_ban_added': {'zh': '封禁已添加', 'en': 'Ban added'},
+    'admin_unban': {'zh': '解除封禁', 'en': 'Unban'},
+    'admin_unban_success': {'zh': '解封成功', 'en': 'Unban successful'},
+    'update': {'zh': '更新', 'en': 'Update'},
+    'broadcast': {'zh': '广播', 'en': 'Broadcast'},
+    'config': {'zh': '配置', 'en': 'Config'},
+    'ban': {'zh': '封禁', 'en': 'Ban'},
+    'unban': {'zh': '解封', 'en': 'Unban'},
+    'words': {'zh': '词汇', 'en': 'Words'},
+    'banned_word': {'zh': '敏感词', 'en': 'Banned Word'},
+    'no_banned_items': {'zh': '没有封禁项', 'en': 'No banned items'},
+    'accept': {'zh': '接受', 'en': 'Accept'},
+    'reject': {'zh': '拒绝', 'en': 'Reject'},
+    'kick': {'zh': '踢出', 'en': 'Kick'},
     
     // 导出聊天记录
     'export_chat_history': {'zh': '导出聊天记录', 'en': 'Export Chat History'},
@@ -245,6 +292,62 @@ class AppLocalizations {
       'zh': '当前会话没有消息可导出',
       'en': 'No messages to export in current session',
     },
+    'join_request': {'zh': '加入请求', 'en': 'Join Request'},
+    'status_change': {'zh': '状态变更', 'en': 'Status Change'},
+    'config_change': {'zh': '配置变更', 'en': 'Config Change'},
+    'system': {'zh': '系统', 'en': 'System'},
+    
+    // 文件消息 i18n
+    'click_to_save_file': {'zh': '点击保存文件', 'en': 'Click to save file'},
+    'file_saved_to': {'zh': '文件已保存到: {0}', 'en': 'File saved to: {0}'},
+    'save_failed': {'zh': '保存失败: {0}', 'en': 'Save failed: {0}'},
+    'cannot_get_download_dir': {'zh': '无法获取下载目录', 'en': 'Cannot get download directory'},
+    
+    // 私聊功能 i18n
+    'select_chat_target': {'zh': '选择聊天对象', 'en': 'Select Chat Target'},
+    'public_chat': {'zh': '公共聊天', 'en': 'Public Chat'},
+    'private_chat': {'zh': '私聊', 'en': 'Private Chat'},
+    'private_chat_to': {'zh': '私聊给 {0}', 'en': 'Private chat to {0}'},
+    
+    // 服务器消息 i18n
+    'server_started': {'zh': '服务器已启动', 'en': 'Server started'},
+    'server_stopped': {'zh': '服务器已停止', 'en': 'Server stopped'},
+    'server_version_label': {'zh': '版本', 'en': 'Version'},
+    'time_label': {'zh': '时间', 'en': 'Time'},
+    'server_response': {'zh': '服务器响应', 'en': 'Server response'},
+    'review_accepted': {'zh': '{0} 通过了您的加入申请', 'en': '{0} accepted your request'},
+    'review_rejected': {'zh': '{0} 拒绝了您的加入申请', 'en': '{0} rejected your request'},
+    
+    // 加入状态 i18n
+    'join_accepted': {'zh': '加入成功', 'en': 'Join accepted'},
+    'join_pending': {'zh': '等待管理员审核', 'en': 'Pending admin review'},
+    'join_ip_banned': {'zh': 'IP被封禁', 'en': 'IP banned'},
+    'join_room_full': {'zh': '房间已满', 'en': 'Room full'},
+    'join_username_duplicate': {'zh': '用户名重复', 'en': 'Username duplicate'},
+    'join_banned_words': {'zh': '用户名含违禁词', 'en': 'Username contains banned words'},
+    
+    // 用户状态 i18n
+    'status_rejected': {'zh': '被拒绝', 'en': 'Rejected'},
+    'status_kicked': {'zh': '被踢出', 'en': 'Kicked'},
+    'status_offline': {'zh': '离线', 'en': 'Offline'},
+    'status_pending': {'zh': '等待中', 'en': 'Pending'},
+    'status_online': {'zh': '在线', 'en': 'Online'},
+    'status_admin': {'zh': '管理员', 'en': 'Admin'},
+    'status_root': {'zh': '超级管理员', 'en': 'Root'},
+    
+    // 消息类型 i18n  
+    'broadcast_prefix': {'zh': '{0} 公告', 'en': '{0} Broadcast'},
+    'request_join_msg': {'zh': '{0} (UID: {1}) 请求加入: {2}', 'en': '{0} (UID: {1}) requested to join: {2}'},
+    'status_changed_msg': {'zh': '{0} (UID: {1}) 状态变更为: {2}', 'en': '{0} (UID: {1}) status changed to: {2}'},
+    'config_changed_msg': {'zh': '配置项 {0} 变更为: {1}', 'en': 'Config {0} changed to: {1}'},
+    
+    // 服务器信息对话框
+    'server_info': {'zh': '服务器信息', 'en': 'Server Information'},
+    'my_uid': {'zh': '我的UID', 'en': 'My UID'},
+    'user_list': {'zh': '用户列表', 'en': 'User List'},
+    'uid': {'zh': 'UID', 'en': 'UID'},
+    'status': {'zh': '状态', 'en': 'Status'},
+    'online_users': {'zh': '在线用户', 'en': 'Online Users'},
   };
 
   String translate(String key, [List<String> args = const []]) {
@@ -338,6 +441,10 @@ class AppLocalizations {
   String get pickOtherColor => translate('pick_other_color');
   String get pickSystemColor => translate('pick_system_color');
   String get pickBanColor => translate('pick_ban_color');
+  String get otherPrivateColor => translate('other_private_color');
+  String get myPrivateColor => translate('my_private_color');
+  String get pickOtherPrivateColor => translate('pick_other_private_color');
+  String get pickMyPrivateColor => translate('pick_my_private_color');
   String get markdownRendering => translate('markdown_rendering');
   String get markdownHint => translate('markdown_hint');
   String get enterToSend => translate('enter_to_send');
@@ -346,6 +453,8 @@ class AppLocalizations {
   String get autoScrollHint => translate('auto_scroll_hint');
   String get enableNotifications => translate('enable_notifications');
   String get notificationsHint => translate('notifications_hint');
+  String get loadChatHistory => translate('load_chat_history');
+  String get loadChatHistoryHint => translate('load_chat_history_hint');
   String get disconnectFromServer => translate('disconnect_from_server');
   String get confirmDisconnect => translate('confirm_disconnect');
   String get confirmDisconnectMessage => translate('confirm_disconnect_message');
@@ -358,6 +467,57 @@ class AppLocalizations {
   String get exportFailed => translate('export_failed');
   String exportedTo(String path) => translate('exported_to', [path]);
   String get noMessagesToExport => translate('no_messages_to_export');
+  
+  // 文件消息
+  String get clickToSaveFile => translate('click_to_save_file');
+  String fileSavedTo(String path) => translate('file_saved_to', [path]);
+  String saveFailed(String error) => translate('save_failed', [error]);
+  String get cannotGetDownloadDir => translate('cannot_get_download_dir');
+  
+  // 私聊功能
+  String get selectChatTarget => translate('select_chat_target');
+  String get publicChat => translate('public_chat');
+  String get privateChat => translate('private_chat');
+  String privateChatTo(String target) => translate('private_chat_to', [target]);
+  
+  // 服务器消息
+  String get serverStarted => translate('server_started');
+  String get serverStopped => translate('server_stopped');
+  String get serverVersionLabel => translate('server_version_label');
+  String get timeLabel => translate('time_label');
+  String get serverResponse => translate('server_response');
+  String reviewAccepted(String operator) => translate('review_accepted', [operator]);
+  String reviewRejected(String operator) => translate('review_rejected', [operator]);
+  
+  // 加入状态
+  String get joinAccepted => translate('join_accepted');
+  String get joinPending => translate('join_pending');
+  String get joinIpBanned => translate('join_ip_banned');
+  String get joinRoomFull => translate('join_room_full');
+  String get joinUsernameDuplicate => translate('join_username_duplicate');
+  String get joinBannedWords => translate('join_banned_words');
+  
+  // 用户状态
+  String get statusRejected => translate('status_rejected');
+  String get statusKicked => translate('status_kicked');
+  String get statusOffline => translate('status_offline');
+  String get statusPending => translate('status_pending');
+  String get statusOnline => translate('status_online');
+  String get statusAdmin => translate('status_admin');
+  String get statusRoot => translate('status_root');
+  
+  // 消息类型
+  String broadcastPrefix(String sender) => translate('broadcast_prefix', [sender]);
+  String requestJoinMsg(String username, String uid, String result) => translate('request_join_msg', [username, uid, result]);
+  String statusChangedMsg(String username, String uid, String status) => translate('status_changed_msg', [username, uid, status]);
+  String configChangedMsg(String key, String value) => translate('config_changed_msg', [key, value]);
+  
+  // 服务器信息
+  String get serverInfo => translate('server_info');
+  String get myUid => translate('my_uid');
+  String get userList => translate('user_list');
+  String get uid => translate('uid');
+  String get status => translate('status');
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

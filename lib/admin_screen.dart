@@ -1,29 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'socket_service.dart';
 import 'app_localizations.dart';
-
-class AdminCommand {
-  final String type;
-  final String labelKey;
-  final String hintKey;
-  final bool hasArg;
-  final IconData icon;
-  final int maxLines;
-  final List<String>? options;
-
-  const AdminCommand({
-    required this.type,
-    required this.labelKey,
-    required this.hintKey,
-    required this.hasArg,
-    required this.icon,
-    this.maxLines = 1,
-    this.options,
-  });
-}
 
 class AdminScreen extends StatefulWidget {
   final SocketService socket;
@@ -34,470 +12,385 @@ class AdminScreen extends StatefulWidget {
   AdminScreenState createState() => AdminScreenState();
 }
 
-enum AdminConnectionState { disconnected, connecting, connected, unauthorized }
-
 class AdminScreenState extends State<AdminScreen> {
-  final _controllers = <String, TextEditingController>{};
-  final _dropdownValues = <String, String>{};
-  final _results = <String>[];
-  final _portController = TextEditingController(text: '11451');
-  
-  Socket? _adminSocket;
-  AdminConnectionState _connectionState = AdminConnectionState.disconnected;
-  final _buffer = <int>[];
-  Timer? _heartbeatTimer;
-
-  static const _commands = [
-    AdminCommand(
-      type: 'broadcast',
-      labelKey: 'admin_broadcast',
-      hintKey: 'admin_broadcast_hint',
-      hasArg: true,
-      icon: Icons.campaign,
-      maxLines: 3,
-    ),
-    AdminCommand(
-      type: 'ban',
-      labelKey: 'admin_ban',
-      hintKey: 'admin_ban_hint',
-      hasArg: true,
-      icon: Icons.block,
-    ),
-    AdminCommand(
-      type: 'enable',
-      labelKey: 'admin_enable',
-      hintKey: 'admin_enable_hint',
-      hasArg: true,
-      icon: Icons.check_circle,
-    ),
-    AdminCommand(
-      type: 'set',
-      labelKey: 'admin_set',
-      hintKey: 'admin_set_hint',
-      hasArg: true,
-      icon: Icons.settings_suggest,
-      options: ['EAP on', 'EAP off', 'SEM on', 'SEM off', 'SEM off forever', 'ARO on', 'ARO off'],
-    ),
-    AdminCommand(
-      type: 'accept',
-      labelKey: 'admin_accept',
-      hintKey: 'admin_accept_hint',
-      hasArg: true,
-      icon: Icons.person_add,
-    ),
-    AdminCommand(
-      type: 'reject',
-      labelKey: 'admin_reject',
-      hintKey: 'admin_reject_hint',
-      hasArg: true,
-      icon: Icons.person_remove,
-    ),
-    AdminCommand(
-      type: 'search',
-      labelKey: 'admin_search',
-      hintKey: 'admin_search_hint',
-      hasArg: true,
-      icon: Icons.search,
-      options: ['online', 'offline', 'banned', 'user', 'ip', 'send_times'],
-    ),
-    AdminCommand(
-      type: 'req',
-      labelKey: 'admin_req',
-      hintKey: 'admin_req_hint',
-      hasArg: false,
-      icon: Icons.list_alt,
-    ),
-  ];
+  StreamSubscription<SocketMessage>? _subscription;
 
   @override
   void initState() {
     super.initState();
-    for (final cmd in _commands) {
-      if (cmd.hasArg) {
-        _controllers[cmd.type] = TextEditingController();
-      }
-      if (cmd.options != null && cmd.options!.isNotEmpty) {
-        _dropdownValues[cmd.type] = cmd.options!.first;
-      }
-    }
+    _subscription = widget.socket.messages.listen((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
-    _disconnectAdmin();
-    _portController.dispose();
-    for (final controller in _controllers.values) {
-      controller.dispose();
-    }
+    _subscription?.cancel();
     super.dispose();
   }
 
-  Future<void> _connectAdmin() async {
-    final l10n = AppLocalizations.of(context);
-    final port = int.tryParse(_portController.text.trim());
-    if (port == null) {
-      _showError(l10n.translate('admin_invalid_port'));
-      return;
-    }
-
-    setState(() => _connectionState = AdminConnectionState.connecting);
-
-    try {
-      final serverInfo = widget.socket.serverInfo;
-      if (serverInfo == null) {
-        throw Exception('Chat not connected');
-      }
-
-      _adminSocket = await Socket.connect(serverInfo['ip'], port)
-          .timeout(const Duration(seconds: 5));
-
-      _adminSocket!.setOption(SocketOption.tcpNoDelay, true);
-      _adminSocket!.listen(
-        _onAdminData,
-        onError: (_) => _onAdminDisconnected(),
-        onDone: _onAdminDisconnected,
-      );
-
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      final username = serverInfo['username'] ?? 'Admin';
-      _sendAdminCommand('username', username);
-
-      _heartbeatTimer = Timer.periodic(const Duration(seconds: 15), (_) {
-        if (_adminSocket != null) {
-          try {
-            _adminSocket!.write('{"type":"test","message":""}\n');
-          } catch (_) {}
-        }
-      });
-
-      setState(() => _connectionState = AdminConnectionState.connected);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.translate('admin_connected'))),
-        );
-      }
-    } catch (e) {
-      setState(() => _connectionState = AdminConnectionState.unauthorized);
-      _showError(l10n.translate('admin_connect_failed'));
-    }
+  bool get _isAdmin {
+    final users = widget.socket.users;
+    final myUid = widget.socket.myUid;
+    if (users == null || myUid == null || myUid >= users.length) return false;
+    final status = users[myUid]['status'] as String?;
+    return status == 'Admin' || status == 'Root';
   }
 
-  void _onAdminData(List<int> data) {
-    _buffer.addAll(data);
-    
-    while (true) {
-      final bracketStart = _buffer.indexOf(123);
-      if (bracketStart == -1) break;
-
-      var depth = 0;
-      var end = -1;
-      for (var i = bracketStart; i < _buffer.length; i++) {
-        if (_buffer[i] == 123) depth++;
-        if (_buffer[i] == 125) {
-          depth--;
-          if (depth == 0) {
-            end = i + 1;
-            break;
-          }
-        }
-      }
-
-      if (end == -1) break;
-
-      final jsonBytes = _buffer.sublist(bracketStart, end);
-      _buffer.removeRange(0, end);
-
-      try {
-        final line = utf8.decode(jsonBytes);
-        final json = jsonDecode(line) as Map<String, dynamic>;
-        final type = json['type'] as String?;
-
-        if (type == 'removed') {
-          _onAdminDisconnected();
-          if (mounted) {
-            final l10n = AppLocalizations.of(context);
-            _showError(l10n.translate('admin_removed'));
-          }
-          return;
-        }
-
-        if (type == 'server_closed') {
-          _onAdminDisconnected();
-          if (mounted) {
-            final l10n = AppLocalizations.of(context);
-            _showError(l10n.translate('admin_server_closed'));
-          }
-          return;
-        }
-
-        if (type == 'result') {
-          var msg = json['message'] as String? ?? '';
-          if (msg.isNotEmpty && mounted) {
-            setState(() {
-              final lines = msg.split('\n').where((l) => l.trim().isNotEmpty);
-              for (final line in lines) {
-                _results.insert(0, line);
-              }
-              while (_results.length > 100) {
-                _results.removeLast();
-              }
-            });
-          }
-        }
-      } catch (e) {
-        print('Admin JSON parse error: $e');
-      }
-    }
+  List<Map<String, dynamic>> get _pendingUsers {
+    final users = widget.socket.users ?? [];
+    return users
+        .asMap()
+        .entries
+        .where((e) => e.value['status'] == 'Pending')
+        .map((e) {
+          final user = Map<String, dynamic>.from(e.value);
+          user['uid'] = e.key;
+          return user;
+        })
+        .toList();
   }
 
-  void _onAdminDisconnected() {
-    _disconnectAdmin();
-    if (mounted) {
-      setState(() => _connectionState = AdminConnectionState.disconnected);
-    }
+  List<Map<String, dynamic>> get _onlineUsers {
+    final users = widget.socket.users ?? [];
+    final myUid = widget.socket.myUid;
+    return users
+        .asMap()
+        .entries
+        .where((e) {
+          final status = e.value['status'] as String?;
+          return e.key != myUid && (status == 'Online' || status == 'Admin' || status == 'Root');
+        })
+        .map((e) {
+          final user = Map<String, dynamic>.from(e.value);
+          user['uid'] = e.key;
+          return user;
+        })
+        .toList();
   }
 
-  void _disconnectAdmin() {
-    _heartbeatTimer?.cancel();
-    _heartbeatTimer = null;
-    _adminSocket?.close();
-    _adminSocket = null;
-  }
-
-  void _sendAdminCommand(String type, String message) {
-    if (_adminSocket == null) return;
-    try {
-      final json = jsonEncode({'type': type, 'message': message});
-      _adminSocket!.write('$json\n');
-    } catch (_) {}
-  }
-
-  void _showError(String msg) {
+  void _acceptUser(int uid) {
+    widget.socket.acceptUser(uid);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: Colors.red),
+      SnackBar(content: Text('Accepted user UID: $uid')),
     );
   }
 
-  void _executeCommand(AdminCommand cmd) {
-    String arg;
-    
-    if (cmd.options != null) {
-      final selected = _dropdownValues[cmd.type] ?? cmd.options!.first;
-      final needsParam = ['user', 'ip', 'send_times'].contains(selected);
-      
-      if (needsParam) {
-        final param = _controllers[cmd.type]?.text.trim() ?? '';
-        if (param.isEmpty) {
-          final l10n = AppLocalizations.of(context);
-          _showError(l10n.fillAllFields);
-          return;
-        }
-        arg = '$selected $param';
-      } else {
-        arg = selected;
-      }
-    } else if (cmd.hasArg) {
-      arg = _controllers[cmd.type]!.text.trim();
-      if (arg.isEmpty) {
-        final l10n = AppLocalizations.of(context);
-        _showError(l10n.fillAllFields);
-        return;
-      }
-    } else {
-      arg = '';
-    }
-    
-    _sendAdminCommand(cmd.type, arg);
-    if (cmd.hasArg && _controllers[cmd.type] != null) {
-      _controllers[cmd.type]!.clear();
-    }
+  void _rejectUser(int uid) {
+    widget.socket.rejectUser(uid);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Rejected user UID: $uid')),
+    );
   }
 
-  Widget _buildCommand(AdminCommand cmd) {
-    final l10n = AppLocalizations.of(context);
-    final label = l10n.translate(cmd.labelKey);
-    final hint = l10n.translate(cmd.hintKey);
-
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(cmd.icon, size: 24),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (cmd.options != null) ...[
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                value: _dropdownValues[cmd.type],
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  labelText: cmd.type == 'search' 
-                      ? l10n.translate('admin_search_type')
-                      : l10n.translate('admin_set_option'),
-                  isDense: true,
-                ),
-                items: cmd.options!.map((opt) {
-                  return DropdownMenuItem(
-                    value: opt,
-                    child: Text(opt),
-                  );
-                }).toList(),
-                onChanged: (val) {
-                  if (val != null) {
-                    setState(() => _dropdownValues[cmd.type] = val);
-                  }
-                },
-              ),
-              if (cmd.type == 'search' && ['user', 'ip', 'send_times'].contains(_dropdownValues[cmd.type])) ...[
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _controllers[cmd.type],
-                  decoration: InputDecoration(
-                    hintText: _dropdownValues[cmd.type] == 'send_times'
-                        ? l10n.translate('admin_search_times_hint')
-                        : l10n.translate('admin_search_param_hint'),
-                    border: const OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                  onSubmitted: (_) => _executeCommand(cmd),
-                ),
-              ],
-            ] else if (cmd.hasArg) ...[
-              const SizedBox(height: 12),
-              TextField(
-                controller: _controllers[cmd.type],
-                decoration: InputDecoration(
-                  hintText: hint,
-                  border: const OutlineInputBorder(),
-                  isDense: true,
-                ),
-                maxLines: cmd.maxLines,
-                onSubmitted: (_) => _executeCommand(cmd),
-              ),
-            ],
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _executeCommand(cmd),
-                icon: const Icon(Icons.send),
-                label: Text(l10n.translate('admin_execute')),
-              ),
-            ),
-          ],
-        ),
+  void _kickUser(int uid) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Kick'),
+        content: Text('Are you sure you want to kick user UID: $uid?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              widget.socket.kickUser(uid);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Kicked user UID: $uid')),
+              );
+            },
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Kick'),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildConnectionPanel() {
-    final l10n = AppLocalizations.of(context);
-    final isConnecting = _connectionState == AdminConnectionState.connecting;
+  void _showBroadcastDialog() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(l10n.translate('admin_broadcast')),
+          content: TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              hintText: l10n.translate('admin_broadcast_hint'),
+              border: const OutlineInputBorder(),
+            ),
+            maxLines: 3,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(l10n.translate('cancel')),
+            ),
+            FilledButton(
+              onPressed: () {
+                final content = controller.text.trim();
+                if (content.isNotEmpty) {
+                  widget.socket.sendBroadcast(content);
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(l10n.translate('admin_broadcast_sent'))),
+                  );
+                }
+              },
+              child: Text(l10n.translate('send')),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-    return Center(
-      child: SizedBox(
-        width: 400,
-        child: Card(
-          margin: const EdgeInsets.all(16),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.admin_panel_settings,
-                  size: 64,
-                  color: _connectionState == AdminConnectionState.unauthorized
-                      ? Colors.red
-                      : Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.translate('admin_connect_title'),
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.translate('admin_connect_hint'),
-                  style: Theme.of(context).textTheme.bodySmall,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                TextField(
-                  controller: _portController,
-                  decoration: InputDecoration(
-                    labelText: l10n.translate('admin_port'),
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.vpn_key),
-                  ),
-                  keyboardType: TextInputType.number,
-                  enabled: !isConnecting,
-                  onSubmitted: (_) => _connectAdmin(),
-                ),
-                if (_connectionState == AdminConnectionState.unauthorized) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red),
+  void _showConfigDialog() {
+    final valueController = TextEditingController();
+    String selectedKey = 'gate.enter_check';
+    
+    showDialog(
+      context: context,
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return StatefulBuilder(
+          builder: (context, setState) {
+            final currentValue = _getConfigValue(selectedKey);
+            if (valueController.text.isEmpty && currentValue != null) {
+              valueController.text = currentValue.toString();
+            }
+            
+            return AlertDialog(
+              title: Text(l10n.translate('admin_config')),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    value: selectedKey,
+                    decoration: InputDecoration(
+                      labelText: l10n.translate('admin_config_key'),
+                      border: const OutlineInputBorder(),
                     ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.error, color: Colors.red),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            l10n.translate('admin_unauthorized'),
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
+                    items: [
+                      'gate.enter_check',
+                      'message.allow_private',
+                      'message.max_length',
+                      'file.allow_any',
+                      'file.allow_private',
+                      'file.max_size',
+                    ].map((key) => DropdownMenuItem(value: key, child: Text(key))).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          selectedKey = value;
+                          final newValue = _getConfigValue(value);
+                          valueController.text = newValue?.toString() ?? '';
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: valueController,
+                    decoration: InputDecoration(
+                      labelText: l10n.translate('admin_config_value'),
+                      hintText: _getConfigHint(selectedKey),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ],
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton.icon(
-                    onPressed: isConnecting ? null : _connectAdmin,
-                    icon: isConnecting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.login),
-                    label: Text(
-                      isConnecting
-                          ? l10n.translate('admin_connecting')
-                          : l10n.translate('admin_connect_button'),
-                    ),
-                  ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(l10n.translate('cancel')),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    final value = valueController.text.trim();
+                    if (value.isNotEmpty) {
+                      dynamic parsedValue = value;
+                      if (value == 'true' || value == 'false') {
+                        parsedValue = value == 'true';
+                      } else if (int.tryParse(value) != null) {
+                        parsedValue = int.parse(value);
+                      }
+                      widget.socket.updateConfig(selectedKey, parsedValue);
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.translate('admin_config_updated'))),
+                      );
+                    }
+                  },
+                  child: Text(l10n.translate('update')),
                 ),
               ],
-            ),
-          ),
-        ),
-      ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showBanDialog() {
+    final controller = TextEditingController();
+    String banType = 'ip';
+    
+    showDialog(
+      context: context,
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(l10n.translate('admin_ban')),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SegmentedButton<String>(
+                    segments: [
+                      ButtonSegment(value: 'ip', label: Text('IP')),
+                      ButtonSegment(value: 'words', label: Text(l10n.translate('words'))),
+                    ],
+                    selected: {banType},
+                    onSelectionChanged: (Set<String> selection) {
+                      setState(() => banType = selection.first);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      labelText: banType == 'ip' ? 'IP' : l10n.translate('words'),
+                      hintText: banType == 'ip' ? '192.168.1.100' : l10n.translate('banned_word'),
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(l10n.translate('cancel')),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    final value = controller.text.trim();
+                    if (value.isNotEmpty) {
+                      final key = 'ban.$banType';
+                      final currentList = (widget.socket.serverConfig?['ban']?[banType] as List?) ?? [];
+                      final newList = [...currentList, value];
+                      widget.socket.updateConfig(key, newList);
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.translate('admin_ban_added'))),
+                      );
+                    }
+                  },
+                  style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                  child: Text(l10n.translate('ban')),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  dynamic _getConfigValue(String key) {
+    final parts = key.split('.');
+    if (parts.length != 2) return null;
+    final section = parts[0];
+    final field = parts[1];
+    return widget.socket.serverConfig?[section]?[field];
+  }
+  
+  String _getConfigHint(String key) {
+    if (key.contains('check') || key.contains('allow')) {
+      return 'true or false';
+    }
+    if (key.contains('length') || key.contains('size')) {
+      return 'number (e.g., 16384)';
+    }
+    return 'value';
+  }
+
+  void _showUnbanDialog() {
+    String banType = 'ip';
+    
+    showDialog(
+      context: context,
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final currentList = (widget.socket.serverConfig?['ban']?[banType] as List?)?.cast<String>() ?? [];
+            
+            return AlertDialog(
+              title: Text(l10n.translate('admin_unban')),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SegmentedButton<String>(
+                    segments: [
+                      ButtonSegment(value: 'ip', label: Text('IP')),
+                      ButtonSegment(value: 'words', label: Text(l10n.translate('words'))),
+                    ],
+                    selected: {banType},
+                    onSelectionChanged: (Set<String> selection) {
+                      setDialogState(() => banType = selection.first);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  if (currentList.isEmpty)
+                    Text(l10n.translate('no_banned_items'))
+                  else
+                    SizedBox(
+                      width: double.maxFinite,
+                      height: 200,
+                      child: ListView.builder(
+                        itemCount: currentList.length,
+                        itemBuilder: (context, index) {
+                          final item = currentList[index];
+                          return ListTile(
+                            title: Text(item),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.remove_circle, color: Colors.green),
+                              onPressed: () {
+                                final newList = [...currentList]..removeAt(index);
+                                widget.socket.updateConfig('ban.$banType', newList);
+                                Future.delayed(const Duration(milliseconds: 50), () {
+                                  if (context.mounted) {
+                                    setDialogState(() {});
+                                  }
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(l10n.translate('admin_unban_success'))),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(l10n.translate('close')),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -505,100 +398,176 @@ class AdminScreenState extends State<AdminScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    if (_connectionState != AdminConnectionState.connected) {
-      return _buildConnectionPanel();
+    if (!widget.socket.isConnected) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.link_off, size: 64, color: Colors.grey),
+            const SizedBox(height: 16),
+            Text(
+              l10n.disconnectedFromServer,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+          ],
+        ),
+      );
     }
 
-    return Column(
+    if (!_isAdmin) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.admin_panel_settings_outlined, size: 64, color: Colors.grey),
+            const SizedBox(height: 16),
+            Text(
+              l10n.translate('admin_unauthorized'),
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.translate('admin_need_permission'),
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    final pendingUsers = _pendingUsers;
+    final onlineUsers = _onlineUsers;
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer,
-            border: Border(
-              bottom: BorderSide(color: Theme.of(context).dividerColor),
-            ),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.check_circle, color: Colors.green, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                l10n.translate('admin_status_connected'),
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const Spacer(),
-              TextButton.icon(
-                onPressed: _onAdminDisconnected,
-                icon: const Icon(Icons.logout, size: 18),
-                label: Text(l10n.translate('admin_disconnect')),
-              ),
-            ],
+        Text(
+          l10n.translate('admin_actions'),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
           ),
         ),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: _commands.length,
-            itemBuilder: (_, i) => _buildCommand(_commands[i]),
-          ),
-        ),
-        if (_results.isNotEmpty)
-          Container(
-            constraints: const BoxConstraints(maxHeight: 200),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              border: Border(
-                top: BorderSide(
-                  color: Theme.of(context).dividerColor,
-                ),
-              ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            ElevatedButton.icon(
+              onPressed: _showBroadcastDialog,
+              icon: const Icon(Icons.campaign),
+              label: Text(l10n.translate('broadcast')),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.terminal, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.translate('admin_results'),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.clear_all, size: 18),
-                        onPressed: () => setState(() => _results.clear()),
-                        tooltip: l10n.translate('admin_clear'),
-                      ),
-                    ],
+            ElevatedButton.icon(
+              onPressed: _showConfigDialog,
+              icon: const Icon(Icons.settings),
+              label: Text(l10n.translate('config')),
+            ),
+            ElevatedButton.icon(
+              onPressed: _showBanDialog,
+              icon: const Icon(Icons.block),
+              label: Text(l10n.translate('ban')),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red[100]),
+            ),
+            ElevatedButton.icon(
+              onPressed: _showUnbanDialog,
+              icon: const Icon(Icons.check_circle),
+              label: Text(l10n.translate('unban')),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green[100]),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        if (pendingUsers.isNotEmpty) ...[
+          Text(
+            l10n.translate('admin_pending_requests'),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...pendingUsers.map((user) {
+            final uid = user['uid'] as int;
+            final username = user['username'] as String? ?? 'Unknown';
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.orange,
+                  child: Text(
+                    uid.toString(),
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
                   ),
                 ),
-                Expanded(
-                  child: ListView.builder(
-                    reverse: true,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    itemCount: _results.length,
-                    itemBuilder: (_, i) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        _results[i],
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontFamily: 'monospace',
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant,
-                        ),
-                      ),
+                title: Text(username),
+                subtitle: Text('UID: $uid - ${l10n.statusPending}'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.check, color: Colors.green),
+                      onPressed: () => _acceptUser(uid),
+                      tooltip: l10n.translate('accept'),
                     ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.red),
+                      onPressed: () => _rejectUser(uid),
+                      tooltip: l10n.translate('reject'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+          const SizedBox(height: 24),
+        ],
+        Text(
+          l10n.translate('admin_online_users'),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (onlineUsers.isEmpty)
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                l10n.translate('admin_no_online_users'),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+          )
+        else
+          ...onlineUsers.map((user) {
+            final uid = user['uid'] as int;
+            final username = user['username'] as String? ?? 'Unknown';
+            final status = user['status'] as String? ?? 'Unknown';
+            final statusColor = status == 'Root' ? Colors.red : (status == 'Admin' ? Colors.blue : Colors.green);
+            
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: statusColor,
+                  child: Text(
+                    uid.toString(),
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
                   ),
                 ),
-              ],
-            ),
-          ),
+                title: Text(username),
+                subtitle: Text('UID: $uid - $status'),
+                trailing: IconButton(
+                  icon: const Icon(Icons.person_remove, color: Colors.red),
+                  onPressed: () => _kickUser(uid),
+                  tooltip: l10n.translate('kick'),
+                ),
+              ),
+            );
+          }).toList(),
       ],
     );
   }
