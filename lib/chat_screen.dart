@@ -36,6 +36,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
+  final _focusNode = FocusNode();
   final _messages = <SocketMessage>[];
   StreamSubscription<SocketMessage>? _subscription;
   ChatViewMode _viewMode = ChatViewMode.bubble;
@@ -219,6 +220,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _subscription?.cancel();
     _controller.dispose();
     _scrollController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -358,6 +360,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (text.isEmpty) return;
     widget.socket.sendMessage(text, to: _chatTarget);
     _controller.clear();
+    _focusNode.requestFocus();
   }
 
   void _showChatTargetSelector() {
@@ -543,6 +546,7 @@ class _ChatScreenState extends State<ChatScreen> {
               Expanded(
                 child: TextField(
                   controller: _controller,
+                  focusNode: _focusNode,
                   decoration: InputDecoration(
                     hintText: _chatTarget == -1 ? l10n.typeMessage : '${l10n.privateChatTo(_getChatTargetName())}',
                     border: const OutlineInputBorder(),
