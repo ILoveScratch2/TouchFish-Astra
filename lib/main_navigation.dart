@@ -274,6 +274,14 @@ class _MainNavigationState extends State<MainNavigation> {
           const Spacer(),
           const Divider(),
           ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: Text(l10n.serverInfo),
+            onTap: () {
+              Navigator.pop(context);
+              _showServerInfo();
+            },
+          ),
+          ListTile(
             leading: const Icon(Icons.settings),
             title: Text(l10n.settings),
             selected: _currentTab == NavigationTab.settings,
