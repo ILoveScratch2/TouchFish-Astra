@@ -58,6 +58,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (!mounted) return;
       if (msg.type == 'SERVER.DATA') {
         _loadChatHistoryIfEnabled(msg);
+        _showEnterHintIfExists(msg);
       }
       
       setState(() {
@@ -158,6 +159,18 @@ class _ChatScreenState extends State<ChatScreen> {
       if (_autoScroll) {
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollDown());
       }
+    }
+  }
+
+  void _showEnterHintIfExists(SocketMessage serverDataMsg) {
+    final enterHint = widget.socket.serverConfig?['gate']?['enter_hint'] as String?;
+    if (enterHint != null && enterHint.isNotEmpty) {
+      setState(() {
+        _messages.insert(0, SocketMessage({
+          'type': 'SYSTEM.ENTER_HINT',
+          'content': enterHint,
+        }));
+      });
     }
   }
 
@@ -308,6 +321,8 @@ class _ChatScreenState extends State<ChatScreen> {
         final type = msg.rawData['type'] as String?;
         if (type == 'SERVER.DATA') {
           return '';
+        } else if (type == 'SYSTEM.ENTER_HINT') {
+          return msg.rawData['content'] as String? ?? '';
         } else if (type == 'SERVER.START') {
           final version = msg.rawData['server_version'] as String? ?? 'unknown';
           final time = msg.rawData['time'] as String? ?? '';
