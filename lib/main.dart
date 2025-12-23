@@ -161,7 +161,7 @@ class ConnectScreen extends StatefulWidget {
 }
 
 class _ConnectScreenState extends State<ConnectScreen> {
-  final _ipController = TextEditingController(text: 'www.bopid.cn');
+  final _ipController = TextEditingController(text: 'touchfish.xin');
   final _portController = TextEditingController(text: '7001');
   final _usernameController = TextEditingController();
   var _connecting = false;
@@ -180,7 +180,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
     if (remember) {
       setState(() {
         _rememberConfig = true;
-        _ipController.text = prefs.getString('server_ip') ?? 'www.bopid.cn';
+        _ipController.text = prefs.getString('server_ip') ?? 'touchfish.xin';
         _portController.text = prefs.getString('server_port') ?? '7001';
         _usernameController.text = prefs.getString('username') ?? '';
       });
