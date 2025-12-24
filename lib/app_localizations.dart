@@ -160,6 +160,7 @@ class AppLocalizations {
       'zh': '连接时自动加载上线前的公共聊天记录',
       'en': 'Auto-load public chat history from before connection',
     },
+    'history_separator': {'zh': '以上为历史消息', 'en': 'Above are historical messages'},
     'disconnect_from_server': {'zh': '断开与服务器的连接', 'en': 'Disconnect from Server'},
     'confirm_disconnect': {
       'zh': '确认断开连接',
@@ -505,6 +506,9 @@ class AppLocalizations {
   String get statusOnline => translate('status_online');
   String get statusAdmin => translate('status_admin');
   String get statusRoot => translate('status_root');
+  
+  // 历史消息分隔符
+  String get historySeparator => translate('history_separator');
   
   // 消息类型
   String broadcastPrefix(String sender) => translate('broadcast_prefix', [sender]);

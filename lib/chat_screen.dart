@@ -155,6 +155,10 @@ class _ChatScreenState extends State<ChatScreen> {
         }).toList();
         final insertIndex = _messages.isEmpty ? 0 : _messages.length;
         _messages.insertAll(insertIndex, historyMessages);
+        _messages.insert(insertIndex + historyMessages.length, SocketMessage({
+          'type': 'SYSTEM.HISTORY_SEPARATOR',
+          'content': '_history_separator_i18n_',
+        }));
       });
       
       if (_autoScroll) {
@@ -325,6 +329,8 @@ class _ChatScreenState extends State<ChatScreen> {
           return '';
         } else if (type == 'SYSTEM.ENTER_HINT') {
           return msg.rawData['content'] as String? ?? '';
+        } else if (type == 'SYSTEM.HISTORY_SEPARATOR') {
+          return l10n.historySeparator;
         } else if (type == 'SERVER.START') {
           final version = msg.rawData['server_version'] as String? ?? 'unknown';
           final time = msg.rawData['time'] as String? ?? '';
