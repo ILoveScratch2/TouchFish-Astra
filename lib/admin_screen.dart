@@ -84,26 +84,27 @@ class AdminScreenState extends State<AdminScreen> {
   }
 
   void _kickUser(int uid) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirm Kick'),
-        content: Text('Are you sure you want to kick user UID: $uid?'),
+        title: Text(l10n.confirmKickTitle),
+        content: Text(l10n.confirmKickMessage('$uid')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
               widget.socket.kickUser(uid);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Kicked user UID: $uid')),
+                SnackBar(content: Text(l10n.kickedUser('$uid'))),
               );
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Kick'),
+            child: Text(l10n.kick),
           ),
         ],
       ),

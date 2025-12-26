@@ -288,6 +288,9 @@ class AppLocalizations {
     'accept': {'zh': '接受', 'en': 'Accept'},
     'reject': {'zh': '拒绝', 'en': 'Reject'},
     'kick': {'zh': '踢出', 'en': 'Kick'},
+    'confirm_kick_title': {'zh': '确认踢出', 'en': 'Confirm Kick'},
+    'confirm_kick_message': {'zh': '确定要踢出用户 UID: {0} 吗？', 'en': 'Are you sure you want to kick user UID: {0}?'},
+    'kicked_user': {'zh': '已踢出用户 UID: {0}', 'en': 'Kicked user UID: {0}'},
     
     // 导出聊天记录
     'export_chat_history': {'zh': '导出聊天记录', 'en': 'Export Chat History'},
@@ -540,6 +543,11 @@ class AppLocalizations {
   String get userList => translate('user_list');
   String get uid => translate('uid');
   String get status => translate('status');
+  
+  // Confirm Kick 对话框
+  String get confirmKickTitle => translate('confirm_kick_title');
+  String confirmKickMessage(String uid) => translate('confirm_kick_message', [uid]);
+  String kickedUser(String uid) => translate('kicked_user', [uid]);
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
