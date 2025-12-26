@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../app_localizations.dart';
 
 class MessageContent extends StatelessWidget {
   final String text;
@@ -15,8 +17,40 @@ class MessageContent extends StatelessWidget {
     this.textStyle,
   });
 
+  void _showContextMenu(BuildContext context, Offset position) {
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    
+    showMenu(
+      context: context,
+      position: RelativeRect.fromRect(
+        Rect.fromLTWH(position.dx, position.dy, 0, 0),
+        Offset.zero & overlay.size,
+      ),
+      items: [
+        PopupMenuItem(
+          onTap: () => Clipboard.setData(ClipboardData(text: text)),
+          child: Row(
+            children: [
+              const Icon(Icons.copy, size: 18),
+              const SizedBox(width: 8),
+              Text(AppLocalizations.of(context).contextCopy),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    return GestureDetector(
+      onSecondaryTapDown: (details) => _showContextMenu(context, details.globalPosition),
+      onLongPressStart: (details) => _showContextMenu(context, details.globalPosition),
+      child: _buildContent(context),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
     if (!enableMarkdown) {
       return Text(text, style: textStyle);
     }

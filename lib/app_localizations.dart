@@ -37,6 +37,15 @@ class AppLocalizations {
     'type_message': {'zh': '输入消息...', 'en': 'Type message...'},
     'send': {'zh': '发送', 'en': 'Send'},
     'attach_file': {'zh': '附加文件', 'en': 'Attach file'},
+    
+    // 上下文菜单
+    'context_cut': {'zh': '剪切', 'en': 'Cut'},
+    'context_copy': {'zh': '复制', 'en': 'Copy'},
+    'context_paste': {'zh': '粘贴', 'en': 'Paste'},
+    'context_format': {'zh': '格式', 'en': 'Format'},
+    'context_bold': {'zh': '加粗', 'en': 'Bold'},
+    'context_italic': {'zh': '斜体', 'en': 'Italic'},
+    'context_strikethrough': {'zh': '删除线', 'en': 'Strikethrough'},
 
     // 文件传输
     'user_joined': {'zh': '用户 {0} 加入聊天室。', 'en': 'User {0} joined the chat.'},
@@ -390,6 +399,15 @@ class AppLocalizations {
   String get typeMessage => translate('type_message');
   String get send => translate('send');
   String get attachFile => translate('attach_file');
+  
+  // 上下文菜单
+  String get contextCut => translate('context_cut');
+  String get contextCopy => translate('context_copy');
+  String get contextPaste => translate('context_paste');
+  String get contextFormat => translate('context_format');
+  String get contextBold => translate('context_bold');
+  String get contextItalic => translate('context_italic');
+  String get contextStrikethrough => translate('context_strikethrough');
 
   // 文件传输
   String userJoined(String username) => translate('user_joined', [username]);

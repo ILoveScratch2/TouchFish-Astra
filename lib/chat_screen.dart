@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -238,6 +239,144 @@ class _ChatScreenState extends State<ChatScreen> {
     if (_scrollController.hasClients) {
       _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
     }
+  }
+
+  void _showInputContextMenu(BuildContext context, Offset position) {
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final selection = _controller.selection;
+    final hasSelection = selection.start != selection.end;
+    final text = _controller.text;
+    final l10n = AppLocalizations.of(context);
+    
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(
+        Rect.fromLTWH(position.dx, position.dy, 0, 0),
+        Offset.zero & overlay.size,
+      ),
+      items: <PopupMenuEntry<String>>[
+        PopupMenuItem<String>(
+          enabled: hasSelection,
+          value: 'cut',
+          child: Row(
+            children: [
+              const Icon(Icons.cut, size: 18),
+              const SizedBox(width: 8),
+              Text(l10n.contextCut),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          enabled: hasSelection,
+          value: 'copy',
+          child: Row(
+            children: [
+              const Icon(Icons.copy, size: 18),
+              const SizedBox(width: 8),
+              Text(l10n.contextCopy),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'paste',
+          child: Row(
+            children: [
+              const Icon(Icons.paste, size: 18),
+              const SizedBox(width: 8),
+              Text(l10n.contextPaste),
+            ],
+          ),
+        ),
+        const PopupMenuDivider(),
+        PopupMenuItem<String>(
+          enabled: false,
+          child: Text(l10n.contextFormat, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+        ),
+        PopupMenuItem<String>(
+          value: 'bold',
+          child: Row(
+            children: [
+              const Icon(Icons.format_bold, size: 18),
+              const SizedBox(width: 8),
+              Text(l10n.contextBold),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'italic',
+          child: Row(
+            children: [
+              const Icon(Icons.format_italic, size: 18),
+              const SizedBox(width: 8),
+              Text(l10n.contextItalic),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'strikethrough',
+          child: Row(
+            children: [
+              const Icon(Icons.strikethrough_s, size: 18),
+              const SizedBox(width: 8),
+              Text(l10n.contextStrikethrough),
+            ],
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == null) return;
+      
+      switch (value) {
+        case 'cut':
+          Clipboard.setData(ClipboardData(text: text.substring(selection.start, selection.end)));
+          final newText = text.substring(0, selection.start) + text.substring(selection.end);
+          _controller.text = newText;
+          _controller.selection = TextSelection.collapsed(offset: selection.start);
+          break;
+        case 'copy':
+          Clipboard.setData(ClipboardData(text: text.substring(selection.start, selection.end)));
+          break;
+        case 'paste':
+          Clipboard.getData('text/plain').then((data) {
+            if (data?.text != null) {
+              final currentText = _controller.text;
+              final currentSelection = _controller.selection;
+              final offset = currentSelection.start;
+              final newText = currentText.substring(0, offset) + data!.text! + currentText.substring(currentSelection.end);
+              final newOffset = offset + data.text!.length;
+              _controller.text = newText;
+              _controller.selection = TextSelection.collapsed(offset: newOffset);
+            }
+          });
+          break;
+        case 'bold':
+          _insertMarkdown('**', '**');
+          break;
+        case 'italic':
+          _insertMarkdown('*', '*');
+          break;
+        case 'strikethrough':
+          _insertMarkdown('~~', '~~');
+          break;
+      }
+    });
+  }
+
+  void _insertMarkdown(String prefix, String suffix) {
+    final selection = _controller.selection;
+    final text = _controller.text;
+    final selectedText = selection.start != selection.end
+        ? text.substring(selection.start, selection.end)
+        : '';
+    
+    final newText = text.substring(0, selection.start) +
+        prefix + selectedText + suffix +
+        text.substring(selection.end);
+    
+    _controller.text = newText;
+    _controller.selection = TextSelection.collapsed(
+      offset: selection.start + prefix.length + selectedText.length,
+    );
   }
 
   String _buildChatMessageText(ChatMessage msg, AppLocalizations l10n) {
@@ -550,16 +689,20 @@ class _ChatScreenState extends State<ChatScreen> {
                 tooltip: _chatTarget == -1 ? l10n.publicChat : '${l10n.privateChat}: ${_getChatTargetName()}',
               ),
               Expanded(
-                child: TextField(
-                  controller: _controller,
-                  focusNode: _focusNode,
-                  decoration: InputDecoration(
-                    hintText: _chatTarget == -1 ? l10n.typeMessage : '${l10n.privateChatTo(_getChatTargetName())}',
-                    border: const OutlineInputBorder(),
-                    prefixIcon: _chatTarget >= 0 ? Icon(Icons.lock, color: Colors.green, size: 16) : null,
+                child: GestureDetector(
+                  onSecondaryTapDown: (details) => _showInputContextMenu(context, details.globalPosition),
+                  onLongPressStart: (details) => _showInputContextMenu(context, details.globalPosition),
+                  child: TextField(
+                    controller: _controller,
+                    focusNode: _focusNode,
+                    decoration: InputDecoration(
+                      hintText: _chatTarget == -1 ? l10n.typeMessage : '${l10n.privateChatTo(_getChatTargetName())}',
+                      border: const OutlineInputBorder(),
+                      prefixIcon: _chatTarget >= 0 ? Icon(Icons.lock, color: Colors.green, size: 16) : null,
+                    ),
+                    maxLines: _enterToSend ? 1 : null,
+                    onSubmitted: _enterToSend ? (_) => _send() : null,
                   ),
-                  maxLines: _enterToSend ? 1 : null,
-                  onSubmitted: _enterToSend ? (_) => _send() : null,
                 ),
               ),
               const SizedBox(width: 8),
