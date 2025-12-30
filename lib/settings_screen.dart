@@ -108,7 +108,7 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
   
   void _handleEasterEggTap(BuildContext context) {
     final now = DateTime.now();
-    if (_lastTapTime != null && now.difference(_lastTapTime!).inMilliseconds < 300) {
+    if (_lastTapTime != null && now.difference(_lastTapTime!).inMilliseconds < 200) {
       return;
     }
     _lastTapTime = now;
