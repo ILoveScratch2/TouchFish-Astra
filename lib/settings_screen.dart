@@ -9,7 +9,6 @@ import 'app_localizations.dart';
 import 'constants.dart';
 import 'models/chat_colors.dart';
 import 'models/chat_message.dart';
-import 'chat_screen.dart';
 import 'socket_service.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -38,7 +37,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   ChatColors? _colors;
-  ChatViewMode _viewMode = ChatViewMode.bubble;
   bool _autoSaveFiles = true;
   String _downloadPath = '';
   bool _markdownRendering = true;
@@ -71,7 +69,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
 
     setState(() {
-      _viewMode = ChatViewMode.values[prefs.getInt('chat_view_mode') ?? 1];
       _autoSaveFiles = prefs.getBool('auto_save_files') ?? false;
       _downloadPath = prefs.getString('download_path') ?? defaultPath;
       _markdownRendering = prefs.getBool('markdown_rendering') ?? true;
@@ -551,40 +548,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Card(
           child: Column(
             children: [
-              ListTile(
-                leading: const Icon(Icons.view_module),
-                title: Text(l10n.chatViewMode),
-                subtitle: Text(
-                  _viewMode == ChatViewMode.bubble ? l10n.bubbleMode : l10n.listMode,
-                ),
-                trailing: SegmentedButton<ChatViewMode>(
-                  segments: [
-                    ButtonSegment(
-                      value: ChatViewMode.bubble,
-                      icon: const Icon(Icons.chat_bubble_outline, size: 16),
-                      label: Text(l10n.bubble),
-                    ),
-                    ButtonSegment(
-                      value: ChatViewMode.list,
-                      icon: const Icon(Icons.list, size: 16),
-                      label: Text(l10n.list),
-                    ),
-                  ],
-                  selected: {_viewMode},
-                  onSelectionChanged: (Set<ChatViewMode> selected) async {
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.setInt('chat_view_mode', selected.first.index);
-                    setState(() {
-                      _viewMode = selected.first;
-                    });
-                  },
-                  style: ButtonStyle(
-                    visualDensity: VisualDensity.compact,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ),
-              ),
-              const Divider(height: 1),
               SwitchListTile(
                 secondary: const Icon(Icons.save_alt),
                 title: Text(l10n.autoSaveFiles),

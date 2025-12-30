@@ -107,11 +107,6 @@ class AppLocalizations {
     // 设置界面
     'cancel': {'zh': '取消', 'en': 'Cancel'},
     'chat_settings': {'zh': '聊天设置', 'en': 'Chat Settings'},
-    'chat_view_mode': {'zh': '聊天界面模式', 'en': 'Chat View Mode'},
-    'bubble_mode': {'zh': '气泡模式', 'en': 'Bubble Mode'},
-    'list_mode': {'zh': '列表模式', 'en': 'List Mode'},
-    'bubble': {'zh': '气泡', 'en': 'Bubble'},
-    'list': {'zh': '列表', 'en': 'List'},
     'auto_save_files': {'zh': '自动保存接收的文件', 'en': 'Auto-save received files'},
     'auto_save_hint': {
       'zh': '文件将保存到指定文件夹',
@@ -443,11 +438,6 @@ class AppLocalizations {
   // 设置界面
   String get cancel => translate('cancel');
   String get chatSettings => translate('chat_settings');
-  String get chatViewMode => translate('chat_view_mode');
-  String get bubbleMode => translate('bubble_mode');
-  String get listMode => translate('list_mode');
-  String get bubble => translate('bubble');
-  String get list => translate('list');
   String get autoSaveFiles => translate('auto_save_files');
   String get autoSaveHint => translate('auto_save_hint');
   String get downloadPath => translate('download_path');
@@ -548,6 +538,7 @@ class AppLocalizations {
   String get confirmKickTitle => translate('confirm_kick_title');
   String confirmKickMessage(String uid) => translate('confirm_kick_message', [uid]);
   String kickedUser(String uid) => translate('kicked_user', [uid]);
+  String get kick => translate('kick');
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

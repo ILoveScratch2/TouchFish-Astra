@@ -14,8 +14,6 @@ import 'models/chat_colors.dart';
 import 'widgets/message_content.dart';
 import 'notification_service.dart';
 
-enum ChatViewMode { list, bubble }
-
 class ChatScreen extends StatefulWidget {
   final SocketService socket;
   final String username;
@@ -40,7 +38,6 @@ class _ChatScreenState extends State<ChatScreen> {
   final _focusNode = FocusNode();
   final _messages = <SocketMessage>[];
   StreamSubscription<SocketMessage>? _subscription;
-  ChatViewMode _viewMode = ChatViewMode.bubble;
   ChatColors? _colors;
   bool _markdownEnabled = true;
   bool _enterToSend = true;
@@ -112,14 +109,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
     final prefs = await SharedPreferences.getInstance();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final modeIndex = prefs.getInt('chat_view_mode') ?? 1;
     final markdownEnabled = prefs.getBool('markdown_rendering') ?? true;
     final enterToSend = prefs.getBool('enter_to_send') ?? true;
     final autoScroll = prefs.getBool('auto_scroll') ?? true;
     final autoSaveFiles = prefs.getBool('auto_save_files') ?? false;
     if (!mounted) return;
     setState(() {
-      _viewMode = ChatViewMode.values[modeIndex];
       _markdownEnabled = markdownEnabled;
       _enterToSend = enterToSend;
       _autoScroll = autoScroll;
@@ -671,9 +666,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return Column(
       children: [
         Expanded(
-          child: _viewMode == ChatViewMode.bubble
-              ? _buildBubbleView(chatMessages, colors, l10n)
-              : _buildListView(chatMessages, colors, l10n),
+          child: _buildBubbleView(chatMessages, colors, l10n),
         ),
         const Divider(height: 1),
         Padding(
@@ -867,104 +860,6 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ],
             ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildListView(
-    List<ChatMessage> messages,
-    ChatColors colors,
-    AppLocalizations l10n,
-  ) {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(8),
-      itemCount: messages.length,
-      itemBuilder: (context, i) {
-        final msg = messages[i];
-
-        final isSystemMessage = msg.type != MessageType.chat || msg.isBroadcast;
-
-        if (isSystemMessage) {
-          final translatedContent = _translateMessage(msg, l10n);
-          if (translatedContent.isEmpty) {
-            return const SizedBox.shrink();
-          }
-        }
-
-        final isMine = msg.isMine(widget.socket.myUid);
-        Color? bgColor;
-        if (isSystemMessage) {
-          final translatedContent = _translateMessage(msg, l10n);
-          final isBan = translatedContent.contains('封禁') || 
-                        translatedContent.contains('ban') ||
-                        translatedContent.contains('Kicked');
-          final isBroadcast = msg.isBroadcast;
-          bgColor = isBan 
-              ? colors.banNotification 
-              : (isBroadcast ? colors.banNotification.withOpacity(0.7) : colors.systemMessage);
-        } else if (msg.isFile) {
-          bgColor = colors.fileBubble;
-        } else if (msg.isPrivate) {
-          bgColor = isMine ? colors.myPrivateBubble : colors.privateBubble;
-        } else {
-          bgColor = isMine ? colors.myMessageBubble : colors.otherMessageBubble;
-        }
-
-        return InkWell(
-          onTap: msg.isFile ? () => _saveFile(msg) : null,
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 2),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(4),
-              border: msg.isFile
-                  ? Border.all(color: Colors.amber.shade700, width: 2)
-                  : (msg.isPrivate
-                      ? Border.all(color: isMine ? Colors.purple : Colors.green, width: 2)
-                      : null),
-            ),
-            child: msg.isFile
-                ? Row(
-                    children: [
-                      Icon(
-                        Icons.folder,
-                        color: Colors.amber.shade700,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              msg.filename ?? 'file',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.amber.shade900,
-                              ),
-                            ),
-                            Text(
-                              '点击保存文件',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.amber.shade700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  )
-                : MessageContent(
-                    text: msg.type == MessageType.chat
-                        ? _buildChatMessageText(msg, l10n)
-                        : _translateMessage(msg, l10n),
-                    enableMarkdown: _markdownEnabled,
-                    textStyle: Theme.of(context).textTheme.bodyMedium,
-                  ),
           ),
         );
       },
