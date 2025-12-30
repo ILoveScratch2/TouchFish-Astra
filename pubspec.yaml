@@ -1,7 +1,7 @@
 name: touchfish_astra
 description: "TouchFish GUI Client - Cross-platform chat client"
 publish_to: 'none'
-version: 2.0.3+202
+version: 2.1.0+210
 
 environment:
   sdk: ^3.9.2
