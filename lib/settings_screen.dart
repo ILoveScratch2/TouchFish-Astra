@@ -35,7 +35,7 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStateMixin {
   ChatColors? _colors;
   bool _autoSaveFiles = true;
   String _downloadPath = '';
@@ -44,12 +44,174 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _autoScroll = true;
   bool _enableNotifications = false;
   bool _loadChatHistory = false;
+  
+  // 彩蛋 （被你发现了！）
+  int _easterEggTapCount = 0;
+  DateTime? _lastTapTime;
+  AnimationController? _shakeController;
+  AnimationController? _scaleController;
+  Animation<double>? _shakeAnimation;
+  Animation<double>? _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
     _loadColors();
     _loadSettings();
+    _loadEasterEggCount();
+    _initAnimations();
+  }
+  
+  void _initAnimations() {
+    _shakeController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _scaleController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    
+    _shakeAnimation = Tween<double>(begin: 0, end: 10).animate(
+      CurvedAnimation(
+        parent: _shakeController!,
+        curve: Curves.elasticIn,
+      ),
+    );
+    
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(
+        parent: _scaleController!,
+        curve: Curves.easeOut,
+      ),
+    );
+  }
+  
+  @override
+  void dispose() {
+    _shakeController?.dispose();
+    _scaleController?.dispose();
+    super.dispose();
+  }
+  
+  Future<void> _loadEasterEggCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _easterEggTapCount = prefs.getInt('easter_egg_tap_count') ?? 0;
+    });
+  }
+  
+  Future<void> _saveEasterEggCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('easter_egg_tap_count', _easterEggTapCount);
+  }
+  
+  void _handleEasterEggTap(BuildContext context) {
+    final now = DateTime.now();
+    if (_lastTapTime != null && now.difference(_lastTapTime!).inMilliseconds < 300) {
+      return;
+    }
+    _lastTapTime = now;
+    
+    setState(() {
+      _easterEggTapCount++;
+    });
+    _saveEasterEggCount();
+    _shakeController?.forward(from: 0);
+    _scaleController?.forward(from: 0).then((_) {
+      _scaleController?.reverse();
+    });
+    _showEasterEggSnackBar(context);
+  }
+  
+  void _showEasterEggSnackBar(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    String quote = _getEasterEggQuote(l10n);
+    String? achievement = _getEasterEggAchievement(l10n);
+    
+    ScaffoldMessenger.of(context).clearSnackBars();
+    
+    if (achievement != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                achievement,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                l10n.translate('easter_egg_tap_count', [_easterEggTapCount.toString()]),
+                style: const TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.purple.withOpacity(0.9),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(quote),
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+  
+  String _getEasterEggQuote(AppLocalizations l10n) {
+    final quotes = [
+      'easter_egg_quote_1',
+      'easter_egg_quote_2',
+      'easter_egg_quote_3',
+      'easter_egg_quote_4',
+      'easter_egg_quote_5',
+      'easter_egg_quote_6',
+      'easter_egg_quote_7',
+      'easter_egg_quote_8',
+      'easter_egg_quote_9',
+      'easter_egg_quote_10',
+    ];
+    
+    final index = (_easterEggTapCount - 1) % quotes.length;
+    return l10n.translate(quotes[index]);
+  }
+  
+  String? _getEasterEggAchievement(AppLocalizations l10n) {
+    final milestones = [
+      (5, 'easter_egg_level_1'),
+      (10, 'easter_egg_level_2'),
+      (20, 'easter_egg_level_3'),
+      (50, 'easter_egg_level_4'),
+      (100, 'easter_egg_level_5'),
+      (200, 'easter_egg_level_6'),
+      (500, 'easter_egg_level_7'),
+    ];
+    
+    for (final (count, levelKey) in milestones) {
+      if (_easterEggTapCount == count) {
+        final levelName = l10n.translate(levelKey);
+        return l10n.translate('easter_egg_achievement', [levelName]);
+      }
+    }
+    
+    return null;
   }
 
   Future<void> _loadSettings() async {
@@ -212,10 +374,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      AppConstants.appName,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+                    GestureDetector(
+                      onTap: () => _handleEasterEggTap(context),
+                      child: AnimatedBuilder(
+                        animation: Listenable.merge([_shakeController, _scaleController]),
+                        builder: (context, child) {
+                          final shakeValue = _shakeAnimation?.value ?? 0;
+                          final scaleValue = _scaleAnimation?.value ?? 1.0;
+                          return Transform.translate(
+                            offset: Offset((shakeValue * ((_easterEggTapCount % 2 == 0) ? 1 : -1)), 0),
+                            child: Transform.scale(
+                              scale: scaleValue,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: Text(
+                          AppConstants.appName,
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 4),

@@ -9,6 +9,14 @@ import 'constants.dart';
 import 'notification_service.dart';
 
 void main() async {
+  print('Welcome to TouchFishAstra! ');
+  print('欢迎使用 TouchFishAstra！ ');
+  print('恭喜你发现了彩蛋！ ');
+  print('打个广告：https://github.com/ILoveScratch2/ClipNote.git');
+  print('如果你喜欢TouchFishAstra项目，欢迎给Star！');
+  print('如果你有任何建议或想法，欢迎提交Issue或PR！');
+  print('作者：ILoveScratch2(YWD2023)   版权所有，使用GNU AGPL v3许可协议！');
+  print('其实……还有一个彩蛋哦（Tips：尝试点击应用“关于”页面的标题哦）');
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService().initialize();
   runApp(const TouchFishAstra());

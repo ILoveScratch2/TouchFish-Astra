@@ -287,6 +287,29 @@ class AppLocalizations {
     'confirm_kick_message': {'zh': '确定要踢出用户 UID: {0} 吗？', 'en': 'Are you sure you want to kick user UID: {0}?'},
     'kicked_user': {'zh': '已踢出用户 UID: {0}', 'en': 'Kicked user UID: {0}'},
     
+    // 彩蛋
+    'easter_egg_quote_1': {'zh': 'TouchFish 不是让你摸鱼', 'en': 'TouchFish is not for slacking off'},
+    'easter_egg_quote_2': {'zh': '水题也可以用 TouchFish Touch-Fish', 'en': 'Even water questions can use TouchFish slack-off'},
+    'easter_egg_quote_3': {'zh': 'TouchFish 的作者是XSFX', 'en': 'The author of TouchFish is XSFX'},
+    'easter_egg_quote_4': {'zh': 'TouchFish v4！', 'en': 'TouchFish v4!'},
+    'easter_egg_quote_5': {'zh': 'Luogu 是个好地方', 'en': 'Luogu is a good place'},
+    'easter_egg_quote_6': {'zh': '你好中国！', 'en': 'Hello China!'},
+    'easter_egg_quote_7': {'zh': 'TouchFish 让生活更美好', 'en': 'TouchFish makes life better'},
+    'easter_egg_quote_8': {'zh': 'TouchFish Astra支持Android！', 'en': 'TouchFish Astra supports Android!'},
+    'easter_egg_quote_9': {'zh': '台湾及其附属岛屿自古以来就是中国不可分割的神圣领土，坚持一个中国原则不动摇是最基本的。任何外部势力以及反动分子最终只会被历史唾弃。台湾回归是不可逆转，不可停止的历史进程', 'en': 'Taiwan and its affiliated islands have been an inseparable part of China\'s sacred territory since ancient times. Adhering to the one-China principle is unwavering and fundamental. Any external forces and reactionaries will ultimately be condemned by history. The reunification of Taiwan is an irreversible and unstoppable historical process.'},
+    'easter_egg_quote_10': {'zh': 'TouchFish 让你成为摸鱼界的传奇！ ', 'en': 'Congratulations on becoming a legend by TouchFish! '},
+    
+    // 彩蛋
+    'easter_egg_level_1': {'zh': 'TouchFisher 等级 1 (LTS)', 'en': 'TouchFisher Level 1 (LTS)'},
+    'easter_egg_level_2': {'zh': 'TouchFisher 等级 2 (Pro)', 'en': 'TouchFisher Level 2 (Pro)'},
+    'easter_egg_level_3': {'zh': 'TouchFisher 等级 3 (Plus)', 'en': 'TouchFisher Level 3 (Plus)'},
+    'easter_egg_level_4': {'zh': 'TouchFisher 等级 4 (逝去的Mobile)', 'en': 'TouchFisher Level 4 (LEGACY Mobile)'},
+    'easter_egg_level_5': {'zh': 'TouchFisher 等级 5 (TouchFish UI Remake)', 'en': 'TouchFisher Level 5 (TouchFish UI Remake)'},
+    'easter_egg_level_6': {'zh': 'TouchFisher 等级 6 (TouchFish Astra)', 'en': 'TouchFisher Level 6 (TouchFish Astra)'},
+    'easter_egg_level_7': {'zh': 'TouchFisher 等级 7 (XSFX 版本) 猜猜是谁', 'en': 'TouchFisher Level 7 (XSFX Edition) Guess Who'},
+    'easter_egg_achievement': {'zh': '达成成就：{0}！', 'en': 'Achievement Unlocked: {0}!'},
+    'easter_egg_tap_count': {'zh': 'TouchFish次数：{0}', 'en': 'TouchFish Count: {0}'},
+    
     // 导出聊天记录
     'export_chat_history': {'zh': '导出聊天记录', 'en': 'Export Chat History'},
     'export_chat_hint': {
@@ -539,6 +562,27 @@ class AppLocalizations {
   String confirmKickMessage(String uid) => translate('confirm_kick_message', [uid]);
   String kickedUser(String uid) => translate('kicked_user', [uid]);
   String get kick => translate('kick');
+  
+  // 彩蛋 （被你发现了！）
+  String get easterEggQuote1 => translate('easter_egg_quote_1');
+  String get easterEggQuote2 => translate('easter_egg_quote_2');
+  String get easterEggQuote3 => translate('easter_egg_quote_3');
+  String get easterEggQuote4 => translate('easter_egg_quote_4');
+  String get easterEggQuote5 => translate('easter_egg_quote_5');
+  String get easterEggQuote6 => translate('easter_egg_quote_6');
+  String get easterEggQuote7 => translate('easter_egg_quote_7');
+  String get easterEggQuote8 => translate('easter_egg_quote_8');
+  String get easterEggQuote9 => translate('easter_egg_quote_9');
+  String get easterEggQuote10 => translate('easter_egg_quote_10');
+  String get easterEggLevel1 => translate('easter_egg_level_1');
+  String get easterEggLevel2 => translate('easter_egg_level_2');
+  String get easterEggLevel3 => translate('easter_egg_level_3');
+  String get easterEggLevel4 => translate('easter_egg_level_4');
+  String get easterEggLevel5 => translate('easter_egg_level_5');
+  String get easterEggLevel6 => translate('easter_egg_level_6');
+  String get easterEggLevel7 => translate('easter_egg_level_7');
+  String easterEggAchievement(String level) => translate('easter_egg_achievement', [level]);
+  String easterEggTapCount(String count) => translate('easter_egg_tap_count', [count]);
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
