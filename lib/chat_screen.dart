@@ -77,7 +77,11 @@ class _ChatScreenState extends State<ChatScreen> {
     widget.socket.connectionStatus.listen((connected) {
       if (!mounted) return;
       if (!connected) {
-        _showDisconnectionDialog();
+        final lastMsg = _messages.lastWhere(
+          (msg) => msg.type == 'CONNECTION_LOST',
+          orElse: () => SocketMessage({'type': 'CONNECTION_LOST'}),
+        );
+        _showDisconnectionDialog(lastMsg.reason);
       }
     });
     widget.settingsChangeNotifier?.addListener(_onSettingsChanged);
@@ -175,16 +179,14 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _showDisconnectionDialog() {
+  void _showDisconnectionDialog([String? reason]) {
     if (!mounted) return;
     final l10n = AppLocalizations.of(context);
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => WillPopScope(
-        onWillPop: () async => false,
-        child: AlertDialog(
+      builder: (dialogContext) => AlertDialog(
           icon: Icon(
             Icons.warning_rounded,
             color: Theme.of(dialogContext).colorScheme.error,
@@ -197,9 +199,45 @@ class _ChatScreenState extends State<ChatScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          content: Text(
-            l10n.disconnectedFromServer,
-            style: const TextStyle(fontSize: 16),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.disconnectedFromServer,
+                style: const TextStyle(fontSize: 16),
+              ),
+              if (reason != null) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(dialogContext).colorScheme.errorContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 20,
+                        color: Theme.of(dialogContext).colorScheme.onErrorContainer,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          reason,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontFamily: 'monospace',
+                            color: Theme.of(dialogContext).colorScheme.onErrorContainer,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
           ),
           actions: [
             FilledButton(
@@ -210,7 +248,6 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -666,7 +703,11 @@ class _ChatScreenState extends State<ChatScreen> {
     return Column(
       children: [
         Expanded(
-          child: _buildBubbleView(chatMessages, colors, l10n),
+          child: Focus(
+            canRequestFocus: false,
+            descendantsAreFocusable: false,
+            child: _buildBubbleView(chatMessages, colors, l10n),
+          ),
         ),
         const Divider(height: 1),
         Padding(
@@ -694,6 +735,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       prefixIcon: _chatTarget >= 0 ? Icon(Icons.lock, color: Colors.green, size: 16) : null,
                     ),
                     maxLines: _enterToSend ? 1 : null,
+                    textInputAction: _enterToSend ? TextInputAction.send : TextInputAction.newline,
                     onSubmitted: _enterToSend ? (_) => _send() : null,
                   ),
                 ),
@@ -725,6 +767,7 @@ class _ChatScreenState extends State<ChatScreen> {
       controller: _scrollController,
       padding: const EdgeInsets.all(8),
       itemCount: messages.length,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
       itemBuilder: (context, i) {
         final msg = messages[i];
 

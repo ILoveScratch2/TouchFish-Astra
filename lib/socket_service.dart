@@ -5,8 +5,9 @@ import 'dart:typed_data';
 
 class SocketMessage {
   final Map<String, dynamic> data;
+  final String? reason;
 
-  SocketMessage(this.data);
+  SocketMessage(this.data, {this.reason});
 
   String get type => data['type'] as String? ?? '';
   
@@ -83,11 +84,11 @@ class SocketService {
     );
   }
 
-  void _handleDisconnection() {
+  void _handleDisconnection([String? reason]) {
     if (_socket == null) return;
     if (!_messageController.isClosed) {
       _messageController.add(
-        SocketMessage({'type': 'CONNECTION_LOST'}),
+        SocketMessage({'type': 'CONNECTION_LOST'}, reason: reason),
       );
     }
     disconnect();
@@ -106,6 +107,36 @@ class SocketService {
       try {
         final json = jsonDecode(line) as Map<String, dynamic>;
         final type = json['type'] as String?;
+        
+        if (type == 'GATE.RESPONSE') {
+          final result = json['result'] as String?;
+          if (result != null && result != 'Accepted' && result != 'Pending review') {
+            _handleDisconnection(result);
+            return;
+          }
+        }
+        
+        if (type == 'GATE.REVIEW_RESULT') {
+          final accepted = json['accepted'] as bool?;
+          if (accepted == false) {
+            _handleDisconnection('Review rejected');
+            return;
+          }
+        }
+        
+        if (type == 'GATE.STATUS_CHANGE.ANNOUNCE') {
+          final uid = json['uid'] as int?;
+          final status = json['status'] as String?;
+          if (uid == myUid && status == 'Kicked') {
+            _handleDisconnection('Kicked');
+            return;
+          }
+        }
+        
+        if (type == 'SERVER.STOP.ANNOUNCE') {
+          _handleDisconnection('Server stopped');
+          return;
+        }
         
         if (type == 'SERVER.DATA') {
           myUid = json['uid'] as int?;
