@@ -150,6 +150,32 @@ class _MainNavigationState extends State<MainNavigation> {
     );
   }
 
+  Future<void> _handleDisconnect() async {
+    final l10n = AppLocalizations.of(context);
+    
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.confirmDisconnect),
+        content: Text(l10n.confirmDisconnectMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.disconnect),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      widget.socket.disconnect();
+    }
+  }
+
   Widget _buildNavigationRail() {
     final l10n = AppLocalizations.of(context);
     final mainTabs = [NavigationTab.chat, NavigationTab.admin];
@@ -178,6 +204,17 @@ class _MainNavigationState extends State<MainNavigation> {
                 ),
                 Text(
                   l10n.serverInfo,
+                  style: Theme.of(context).textTheme.labelSmall,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                IconButton(
+                  icon: const Icon(Icons.link_off, size: 24),
+                  onPressed: widget.socket.isConnected ? _handleDisconnect : null,
+                  tooltip: l10n.disconnect,
+                ),
+                Text(
+                  l10n.disconnect,
                   style: Theme.of(context).textTheme.labelSmall,
                   textAlign: TextAlign.center,
                 ),
@@ -280,6 +317,17 @@ class _MainNavigationState extends State<MainNavigation> {
               Navigator.pop(context);
               _showServerInfo();
             },
+          ),
+          ListTile(
+            leading: const Icon(Icons.link_off),
+            title: Text(l10n.disconnect),
+            enabled: widget.socket.isConnected,
+            onTap: widget.socket.isConnected
+                ? () {
+                    Navigator.pop(context);
+                    _handleDisconnect();
+                  }
+                : null,
           ),
           ListTile(
             leading: const Icon(Icons.settings),
