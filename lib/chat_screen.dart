@@ -544,11 +544,9 @@ class _ChatScreenState extends State<ChatScreen> {
           return '${l10n.serverResponse}: $resultText';
         } else if (type == 'GATE.REVIEW_RESULT') {
           final accepted = msg.rawData['accepted'] as bool? ?? false;
-          final operatorData = msg.rawData['operator'] as Map<String, dynamic>?;
-          final operatorName = operatorData?['username'] as String? ?? 'Unknown';
           return accepted 
-              ? l10n.reviewAccepted(operatorName)
-              : l10n.reviewRejected(operatorName);
+              ? l10n.translate('server_review_accepted')
+              : l10n.translate('server_review_rejected');
         }
         return msg.content ?? msg.rawData.toString();
     }

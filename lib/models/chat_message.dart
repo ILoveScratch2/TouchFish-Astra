@@ -25,6 +25,9 @@ class ChatMessage {
     if (type.startsWith('GATE.STATUS_CHANGE')) {
       return ChatMessage(type: MessageType.gateStatus, rawData: msg.data);
     }
+    if (type == 'GATE.REVIEW_RESULT' || type == 'GATE.RESPONSE') {
+      return ChatMessage(type: MessageType.system, rawData: msg.data);
+    }
     if (type.startsWith('GATE.')) {
       return ChatMessage(type: MessageType.gateRequest, rawData: msg.data);
     }

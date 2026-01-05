@@ -351,6 +351,8 @@ class AppLocalizations {
     'server_version_label': {'zh': '版本', 'en': 'Version'},
     'time_label': {'zh': '时间', 'en': 'Time'},
     'server_response': {'zh': '服务器响应', 'en': 'Server response'},
+    'server_review_accepted': {'zh': '服务器审核通过', 'en': 'Server review accepted'},
+    'server_review_rejected': {'zh': '服务器审核拒绝', 'en': 'Server review rejected'},
     'review_accepted': {'zh': '{0} 通过了您的加入申请', 'en': '{0} accepted your request'},
     'review_rejected': {'zh': '{0} 拒绝了您的加入申请', 'en': '{0} rejected your request'},
     
