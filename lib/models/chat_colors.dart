@@ -6,7 +6,7 @@ class ChatColors {
   final Color otherMessageBubble;
   final Color springFestivalAccent;
   final Color systemMessage;
-  final Color banNotification;
+  final Color serverAnnouncement;
   final Color fileBubble;
   final Color privateBubble;
   final Color myPrivateBubble;
@@ -16,7 +16,7 @@ class ChatColors {
     required this.otherMessageBubble,
     required this.springFestivalAccent,
     required this.systemMessage,
-    required this.banNotification,
+    required this.serverAnnouncement,
     required this.fileBubble,
     required this.privateBubble,
     required this.myPrivateBubble,
@@ -27,7 +27,7 @@ class ChatColors {
     otherMessageBubble: Colors.grey[300]!,
     springFestivalAccent: Colors.red[600]!,
     systemMessage: Colors.orange[100]!,
-    banNotification: Colors.red[100]!,
+    serverAnnouncement: Colors.red[100]!,
     fileBubble: Colors.amber[100]!,
     privateBubble: Colors.green[100]!,
     myPrivateBubble: Colors.purple[100]!,
@@ -38,7 +38,7 @@ class ChatColors {
     otherMessageBubble: Colors.grey[800]!,
     springFestivalAccent: Colors.red[400]!,
     systemMessage: Colors.orange[900]!,
-    banNotification: Colors.red[900]!,
+    serverAnnouncement: Colors.red[900]!,
     fileBubble: Colors.amber[900]!,
     privateBubble: Colors.green[900]!,
     myPrivateBubble: Colors.purple[900]!,
@@ -65,9 +65,10 @@ class ChatColors {
         prefs.getInt('color_system_message') ??
             defaults.systemMessage.toARGB32(),
       ),
-      banNotification: Color(
-        prefs.getInt('color_ban_notification') ??
-            defaults.banNotification.toARGB32(),
+      serverAnnouncement: Color(
+        prefs.getInt('color_server_announcement') ??
+            prefs.getInt('color_ban_notification') ??
+            defaults.serverAnnouncement.toARGB32(),
       ),
       fileBubble: Color(
         prefs.getInt('color_file_bubble') ?? defaults.fileBubble.toARGB32(),
@@ -87,7 +88,7 @@ class ChatColors {
     await prefs.setInt('color_other_message', otherMessageBubble.toARGB32());
     await prefs.setInt('color_spring_festival', springFestivalAccent.toARGB32());
     await prefs.setInt('color_system_message', systemMessage.toARGB32());
-    await prefs.setInt('color_ban_notification', banNotification.toARGB32());
+    await prefs.setInt('color_server_announcement', serverAnnouncement.toARGB32());
     await prefs.setInt('color_file_bubble', fileBubble.toARGB32());
     await prefs.setInt('color_private_bubble', privateBubble.toARGB32());
     await prefs.setInt('color_my_private_bubble', myPrivateBubble.toARGB32());
@@ -98,7 +99,7 @@ class ChatColors {
     Color? otherMessageBubble,
     Color? springFestivalAccent,
     Color? systemMessage,
-    Color? banNotification,
+    Color? serverAnnouncement,
     Color? fileBubble,
     Color? privateBubble,
     Color? myPrivateBubble,
@@ -108,7 +109,7 @@ class ChatColors {
       otherMessageBubble: otherMessageBubble ?? this.otherMessageBubble,
       springFestivalAccent: springFestivalAccent ?? this.springFestivalAccent,
       systemMessage: systemMessage ?? this.systemMessage,
-      banNotification: banNotification ?? this.banNotification,
+      serverAnnouncement: serverAnnouncement ?? this.serverAnnouncement,
       fileBubble: fileBubble ?? this.fileBubble,
       privateBubble: privateBubble ?? this.privateBubble,
       myPrivateBubble: myPrivateBubble ?? this.myPrivateBubble,

@@ -817,14 +817,9 @@ class _ChatScreenState extends State<ChatScreen> {
           if (translatedContent.isEmpty) {
             return const SizedBox.shrink();
           }
-          
-          final isBan = translatedContent.contains('封禁') || 
-                        translatedContent.contains('ban') ||
-                        translatedContent.contains('Kicked');
-          final isBroadcast = msg.isBroadcast;
-          final bgColor = isBan 
-              ? colors.banNotification 
-              : (isBroadcast ? colors.banNotification.withOpacity(0.7) : colors.systemMessage);
+          final bgColor = msg.isBroadcast 
+              ? colors.serverAnnouncement 
+              : colors.systemMessage;
 
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),

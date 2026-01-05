@@ -131,13 +131,13 @@ class AppLocalizations {
       'zh': '系统消息/公告颜色',
       'en': 'System Message/Announcement Color',
     },
-    'ban_color': {'zh': '封禁提醒颜色', 'en': 'Ban Notification Color'},
+    'server_announcement_color': {'zh': '服务器公告颜色', 'en': 'Server Announcement Color'},
     'other_private_color': {'zh': '对方私聊颜色', 'en': 'Other Private Message Color'},
     'my_private_color': {'zh': '我的私聊颜色', 'en': 'My Private Message Color'},
     'pick_my_color': {'zh': '选择我的消息颜色', 'en': 'Pick My Message Color'},
     'pick_other_color': {'zh': '选择对方消息颜色', 'en': 'Pick Other Message Color'},
     'pick_system_color': {'zh': '选择系统消息颜色', 'en': 'Pick System Message Color'},
-    'pick_ban_color': {'zh': '选择封禁提醒颜色', 'en': 'Pick Ban Notification Color'},
+    'pick_server_announcement_color': {'zh': '选择服务器公告颜色', 'en': 'Pick Server Announcement Color'},
     'pick_other_private_color': {'zh': '选择对方私聊颜色', 'en': 'Pick Other Private Message Color'},
     'pick_my_private_color': {'zh': '选择我的私聊颜色', 'en': 'Pick My Private Message Color'},
     'markdown_rendering': {
@@ -478,11 +478,11 @@ class AppLocalizations {
   String get myBubbleColor => translate('my_bubble_color');
   String get otherBubbleColor => translate('other_bubble_color');
   String get systemMsgColor => translate('system_msg_color');
-  String get banColor => translate('ban_color');
+  String get serverAnnouncementColor => translate('server_announcement_color');
   String get pickMyColor => translate('pick_my_color');
   String get pickOtherColor => translate('pick_other_color');
   String get pickSystemColor => translate('pick_system_color');
-  String get pickBanColor => translate('pick_ban_color');
+  String get pickServerAnnouncementColor => translate('pick_server_announcement_color');
   String get otherPrivateColor => translate('other_private_color');
   String get myPrivateColor => translate('my_private_color');
   String get pickOtherPrivateColor => translate('pick_other_private_color');

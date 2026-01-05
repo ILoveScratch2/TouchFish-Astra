@@ -936,12 +936,12 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.block),
-                title: Text(l10n.banColor),
+                title: Text(l10n.serverAnnouncementColor),
                 trailing: Container(
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: colors.banNotification,
+                    color: colors.serverAnnouncement,
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.grey),
                   ),
@@ -949,10 +949,10 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
                 onTap: () async {
                   await _pickColor(
                     context,
-                    l10n.pickBanColor,
-                    colors.banNotification,
+                    l10n.pickServerAnnouncementColor,
+                    colors.serverAnnouncement,
                     (color) async {
-                      final newColors = colors.copyWith(banNotification: color);
+                      final newColors = colors.copyWith(serverAnnouncement: color);
                       await newColors.save();
                       await _loadColors();
                     },
