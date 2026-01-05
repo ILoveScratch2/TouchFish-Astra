@@ -13,6 +13,8 @@ import 'models/chat_message.dart';
 import 'models/chat_colors.dart';
 import 'widgets/message_content.dart';
 import 'notification_service.dart';
+import 'constants.dart';
+import 'dart:math' as math;
 
 class ChatScreen extends StatefulWidget {
   final SocketService socket;
@@ -53,6 +55,26 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _loadSettings();
+    
+    // 春节消息！
+    if (AppConstants.springFestivalThemeEnabled) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          final random = math.Random();
+          final greeting = AppConstants.springFestivalGreetings[
+            random.nextInt(AppConstants.springFestivalGreetings.length)
+          ];
+          setState(() {
+            _messages.add(SocketMessage({
+              'type': 'SYSTEM',
+              'content': greeting,
+              'timestamp': DateTime.now().millisecondsSinceEpoch,
+            }));
+          });
+        }
+      });
+    }
+    
     _subscription = widget.socket.messages.listen((msg) {
       if (!mounted) return;
       if (msg.type == 'SERVER.DATA') {
@@ -702,6 +724,25 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Column(
       children: [
+        // 春节装饰横幅
+        if (AppConstants.springFestivalThemeEnabled)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.red.shade700, Colors.red.shade500, Colors.amber.shade700],
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  AppConstants.springFestivalChars.join(' '),
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ],
+            ),
+          ),
         Expanded(
           child: Focus(
             canRequestFocus: false,

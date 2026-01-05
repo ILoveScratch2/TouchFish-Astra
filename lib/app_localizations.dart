@@ -98,6 +98,11 @@ class AppLocalizations {
       'zh': '无法打开文件，请在文件管理器中查找',
       'en': 'Cannot open file, please find it in the file manager',
     },
+
+    // 2026 春节主题
+    'spring_festival_greeting': {'zh': '新春快乐，万事如意！', 'en': 'Happy Spring Festival!'},
+    'spring_festival_welcome': {'zh': '欢迎来到TouchFishAstra春节版！', 'en': 'Welcome to TouchFishAstra Spring Festival Edition!'},
+    'spring_festival_wishes': {'zh': '马年大吉，恭喜发财！', 'en': 'Good fortune in the Year of the Horse!'},
     'open_failed': {'zh': '打开失败: {0}', 'en': 'Open failed: {0}'},
     'cannot_open_location': {
       'zh': '无法打开文件位置: {0}',
@@ -583,6 +588,11 @@ class AppLocalizations {
   String get easterEggLevel7 => translate('easter_egg_level_7');
   String easterEggAchievement(String level) => translate('easter_egg_achievement', [level]);
   String easterEggTapCount(String count) => translate('easter_egg_tap_count', [count]);
+  
+  // 春节主题
+  String get springFestivalGreeting => translate('spring_festival_greeting');
+  String get springFestivalWelcome => translate('spring_festival_welcome');
+  String get springFestivalWishes => translate('spring_festival_wishes');
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

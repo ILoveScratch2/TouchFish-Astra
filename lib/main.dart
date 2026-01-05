@@ -115,17 +115,35 @@ class _TouchFishAstraState extends State<TouchFishAstra> {
       ],
       supportedLocales: const [Locale('zh'), Locale('en')],
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppConstants.springFestivalThemeEnabled 
+            ? Colors.red 
+            : Colors.blue,
+        ),
         useMaterial3: true,
         fontFamily: 'HarmonyOS Sans',
+        appBarTheme: AppConstants.springFestivalThemeEnabled
+          ? AppBarTheme(
+              backgroundColor: Colors.red.shade700,
+              foregroundColor: Colors.white,
+            )
+          : null,
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
+          seedColor: AppConstants.springFestivalThemeEnabled 
+            ? Colors.red 
+            : Colors.blue,
           brightness: Brightness.dark,
         ),
         useMaterial3: true,
         fontFamily: 'HarmonyOS Sans',
+        appBarTheme: AppConstants.springFestivalThemeEnabled
+          ? AppBarTheme(
+              backgroundColor: Colors.red.shade900,
+              foregroundColor: Colors.white,
+            )
+          : null,
       ),
       themeMode: _themeMode,
       home: _socket != null && _username != null
@@ -284,6 +302,25 @@ class _ConnectScreenState extends State<ConnectScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text('${l10n.version} ${AppConstants.version}'),
+                  if (AppConstants.springFestivalThemeEnabled) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.red.shade600, Colors.amber.shade600],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        l10n.springFestivalGreeting,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 32),
                   TextField(
                     controller: _ipController,

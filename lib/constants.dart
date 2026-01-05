@@ -22,4 +22,26 @@ HarmonyOS Sans 字体软件受 HarmonyOS Sans 字体许可协议保护''';
   static const String fontLicenseEn = '''This application uses the HUAWEI HarmonyOS Sans fonts.
 Copyright 2021 Huawei Device Co., Ltd.
 HarmonyOS Sans Fonts Software is licensed under the HarmonyOS Sans Fonts License Agreement.''';
+
+  // 2025->2026 春节主题
+  // 春节时间验证
+  static bool get springFestivalThemeEnabled {
+    final now = DateTime.now();
+    final startDate = DateTime(2026, 2, 15);
+    final endDate = DateTime(2026, 2, 23, 23, 59, 59);
+    return now.isAfter(startDate.subtract(const Duration(seconds: 1))) && 
+           now.isBefore(endDate.add(const Duration(seconds: 1)));
+  }
+  
+  static const List<String> springFestivalGreetings = [
+    'TFA 在春节提示您： 新春快乐！',
+    'TFA 在春节提示您： 恭喜发财！',
+    'TFA 在春节提示您： 马年大吉！',
+    'TFA 在春节提示您： 万事如意！',
+    'TFA 在春节提示您： 阖家欢乐！',
+    'TFA 在春节提示您： 年年有余！',
+    'TFA 在春节提示您： 福星高照！',
+    'TFA 在春节提示您： 吉祥如意！',
+  ];
+  static const List<String> springFestivalChars = ['骏马追风传讯去', '马上聊到', '吉羊接福TF来'];
 }

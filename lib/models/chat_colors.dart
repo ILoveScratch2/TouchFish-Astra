@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ChatColors {
   final Color myMessageBubble;
   final Color otherMessageBubble;
+  final Color springFestivalAccent;
   final Color systemMessage;
   final Color banNotification;
   final Color fileBubble;
@@ -13,6 +14,7 @@ class ChatColors {
   ChatColors({
     required this.myMessageBubble,
     required this.otherMessageBubble,
+    required this.springFestivalAccent,
     required this.systemMessage,
     required this.banNotification,
     required this.fileBubble,
@@ -23,6 +25,7 @@ class ChatColors {
   static ChatColors light() => ChatColors(
     myMessageBubble: Colors.blue[100]!,
     otherMessageBubble: Colors.grey[300]!,
+    springFestivalAccent: Colors.red[600]!,
     systemMessage: Colors.orange[100]!,
     banNotification: Colors.red[100]!,
     fileBubble: Colors.amber[100]!,
@@ -33,6 +36,7 @@ class ChatColors {
   static ChatColors dark() => ChatColors(
     myMessageBubble: Colors.blue[900]!,
     otherMessageBubble: Colors.grey[800]!,
+    springFestivalAccent: Colors.red[400]!,
     systemMessage: Colors.orange[900]!,
     banNotification: Colors.red[900]!,
     fileBubble: Colors.amber[900]!,
@@ -52,6 +56,10 @@ class ChatColors {
       otherMessageBubble: Color(
         prefs.getInt('color_other_message') ??
             defaults.otherMessageBubble.toARGB32(),
+      ),
+      springFestivalAccent: Color(
+        prefs.getInt('color_spring_festival') ??
+            defaults.springFestivalAccent.toARGB32(),
       ),
       systemMessage: Color(
         prefs.getInt('color_system_message') ??
@@ -77,6 +85,7 @@ class ChatColors {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('color_my_message', myMessageBubble.toARGB32());
     await prefs.setInt('color_other_message', otherMessageBubble.toARGB32());
+    await prefs.setInt('color_spring_festival', springFestivalAccent.toARGB32());
     await prefs.setInt('color_system_message', systemMessage.toARGB32());
     await prefs.setInt('color_ban_notification', banNotification.toARGB32());
     await prefs.setInt('color_file_bubble', fileBubble.toARGB32());
@@ -87,6 +96,7 @@ class ChatColors {
   ChatColors copyWith({
     Color? myMessageBubble,
     Color? otherMessageBubble,
+    Color? springFestivalAccent,
     Color? systemMessage,
     Color? banNotification,
     Color? fileBubble,
@@ -96,6 +106,7 @@ class ChatColors {
     return ChatColors(
       myMessageBubble: myMessageBubble ?? this.myMessageBubble,
       otherMessageBubble: otherMessageBubble ?? this.otherMessageBubble,
+      springFestivalAccent: springFestivalAccent ?? this.springFestivalAccent,
       systemMessage: systemMessage ?? this.systemMessage,
       banNotification: banNotification ?? this.banNotification,
       fileBubble: fileBubble ?? this.fileBubble,
