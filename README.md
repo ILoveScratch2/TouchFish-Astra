@@ -95,7 +95,7 @@
 
 ### Windows: 
 
-下载Windows压缩包，全部解压到一个文件夹后后运行即可（注意必须全部解压，而不是在压缩包内双击EXE）或运行安装程序（预计存在于TouchFish Astra v2.2.0+）
+下载Windows压缩包，全部解压到一个文件夹后运行即可（注意必须全部解压，而不是在压缩包内双击EXE）或运行安装程序（预计存在于TouchFish Astra v2.2.0+）
 
 
 最低系统要求为 Windows 10
@@ -123,7 +123,11 @@
 Android包名为`org.dpdns.ilovescratch.tfastra.v4`（对于v2.0.1+）或`org.dpdns.ilovescratch.tfastra`（对于更低版本）
 
 SDK 编译版本 36 (Android 16.0)
+
+
 SDK 运行版本 36 (Android 16.0)
+
+
 SDK 最小兼容版本 24 (Android 7.0)
 
 权限说明:
