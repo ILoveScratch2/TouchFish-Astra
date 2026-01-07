@@ -37,8 +37,8 @@
 
 
 ## 功能特点
- - 简洁风格Material Design用户界面
- - 跨平台支持
+ - Material Design用户界面
+ - 跨平台支持 Windows MacOS GNU/Linux Android
  - 连接聊天服务器并聊天
     - 发送文本
     - 发送文件
@@ -56,7 +56,7 @@
 - 节日特定主题
 
 
-## Screenshots（旧版，仅供参考）
+## Screenshots（旧版TouchFish Astra，与当前版本存在较大区别，仅供参考）
 
 <p align="center">
   <img src="screenshots/windows_login_a.png" alt="Windows 登录界面" width="45%"/>
@@ -88,17 +88,48 @@
 
 前往Releases页面下载对应平台的可执行文件，安装/运行即可。
 
-需要连接到一个运行中的 [TouchFish](https://github.com/2044-space-elevator/TouchFish)或其他兼容服务端 服务器。
+
+需要连接到一个运行中的 **[TouchFish](https://github.com/2044-space-elevator/TouchFish)或其他兼容服务端** 服务器。
+
+## 安装与运行
+
+### Windows: 
+
+下载Windows压缩包，全部解压到一个文件夹后后运行即可（注意必须全部解压，而不是在压缩包内双击EXE）或运行安装程序（预计存在于TouchFish Astra v2.2.0+）
 
 
-Windows: 下载Windows压缩包，全部解压到一个文件夹后后运行即可（注意必须全部解压，而不是在压缩包内双击EXE）
+最低系统要求为 Windows 10
 
-MacOS: 下载MacOS压缩包，解压后运行即可。
+
+需要 Microsoft Visual C++ 库，没有可前往 <https://learn.microsoft.com/zh-cn/cpp/windows/latest-supported-vc-redist?view=msvc-170> 安装，安装后无须重启
+
+### MacOS
+
+下载 MacOS 压缩包，解压后运行即可。
 你可能需要在设置里打开从未认证的开发者处下载的应用
 
-Linux: 解压后运行即可
 
-Android: 提供AAB和APK，如果你不知道什么是AAB请直接下载APK安装
+您可能只有使用 TouchFish Astra v2.2.0+ 才能连接到远程服务器
+
+### Linux
+
+解压后运行 ELF 即可，由于Glibc版本要求，不保证在任何发行版上可用
+
+
+### Android
+
+提供AAB和APK，推荐使用APK，如果你不知道什么是AAB，请直接下载APK安装
+
+Android包名为`org.dpdns.ilovescratch.tfastra.v4`（对于v2.0.1+）或`org.dpdns.ilovescratch.tfastra`（对于更低版本）
+
+SDK 编译版本 36 (Android 16.0)
+SDK 运行版本 36 (Android 16.0)
+SDK 最小兼容版本 24 (Android 7.0)
+
+权限说明:
+ - `android.permission.INTERNET` 用于连接到远程 TouchFish 服务器
+ - `android.permission.MANAGE_EXTERNAL_STORAGE` `android.permission.READ_EXTERNAL_STORAGE` `android.permission.WRITE_EXTERNAL_STORAGE` 用于下载文件
+ - `android.permission.POST_NOTIFICATIONS` `android.permission.VIBRATE` 用于发送通知和提醒
 
 ## Contributing
 
@@ -112,8 +143,7 @@ Android: 提供AAB和APK，如果你不知道什么是AAB请直接下载APK安�
 
 本项目使用[GNU Affero General Public License v3.0](LICENSE)进行许可。
 
-
-
+此最强 Copyleft 许可的权限以在同一许可下提供许可作品和修改的完整源代码为条件，其中包括使用许可作品的较大作品。版权和许可声明必须保留 贡献者明确授予专利权。当使用修改后的版本通过网络提供服务时，必须提供修改后版本的完整源代码。
 
 ## Font License
 
