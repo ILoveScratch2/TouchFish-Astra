@@ -1,21 +1,21 @@
 # TouchFish Astra
 
-<center> <img src="logo.jpg" alt="TouchFish Astra Logo" width="200"/> </center>
-
-<center>一个跨平台的TouchFish客户端</center>
-
+<div align="center">
+<img src="logo.jpg" alt="TouchFish Astra Logo" width="200"/> 
+<p>一个跨平台的TouchFish客户端，支持TouchFish V4</p>
+</div>
 
 > [!IMPORTANT]  
 > 更新：
 >
 > TouchFish v4已发布，目前无 WebSocket 协议，整合 Client 和 Server 端为一个程序。
 >
-> TouchFish Astra v2.0.1 及以上 已适配 TouchFish V4 协议！
+> TouchFish Astra v2.0.1 及以上 已适配 TouchFish V4 协议！（目前截止2026.1.7 唯一适配TF V4的GUI发行版）
 >
 > 新版本将不再会支持 TouchFish V3 及以下版本的协议，如有需求请使用`v1.0.1`及更低版本。
-> Android 新版更改包名，可以与旧版本共存
+> Android 新版更改包名为`org.dpdns.ilovescratch.tfastra.v4`，可以与旧版本共存
 >
-> 适配 TouchFish V4 后，更多功能：
+> 适配 TouchFish V4 后，支持更多功能：
 > - 多行消息支持
 > - ~~Web 端 支持（基于新WebSocket协议）~~ 无了
 > - 更稳定的连接和更可控的文件传输
@@ -30,7 +30,7 @@
 
 在洛谷上看到了[TouchFish的相关内容](https://github.com/2044-space-elevator/TouchFish)，~~非常适合摸鱼~~
 
-现有客户端大多仅局限于一个平台，于是实现一个跨平台的TouchFish客户端。
+现有客户端（目前TF V4只有这个GUI客户端了……）大多仅局限于一个平台，于是实现一个跨平台的TouchFish客户端。
 
 
 基于Flutter框架，可以在Windows、Linux、macOS 和 Android上运行。
@@ -44,14 +44,19 @@
     - 发送文件
     - 接收文件
     - Markdown/LaTeX支持
+    - TouchFish V4 私聊
+    - TouchFish V4 历史消息
 - 高度自定义设置
 - 暗色/浅色主题切换
 - 多语言支持
-- 消息气泡支持
+- 消息气泡支持（独有）
 - 管理员功能支持
+- 消息通知
+- 彩蛋（点击应用`关于`页面的应用标题`TouchFishAstra`试试？）（其实还有另一个彩蛋，但是用户触发不了，你能否找出？）
+- 节日特定主题
 
 
-## Screenshots
+## Screenshots（旧版，仅供参考）
 
 <p align="center">
   <img src="screenshots/windows_login_a.png" alt="Windows 登录界面" width="45%"/>
@@ -106,6 +111,8 @@ Android: 提供AAB和APK，如果你不知道什么是AAB请直接下载APK安�
 ## License
 
 本项目使用[GNU Affero General Public License v3.0](LICENSE)进行许可。
+
+
 
 
 ## Font License
