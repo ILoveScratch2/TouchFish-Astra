@@ -5,6 +5,22 @@
 <p>一个跨平台的TouchFish客户端，支持TouchFish V4</p>
 </div>
 
+<div align="center">
+  <a href="https://github.com/ILoveScratch2/TouchFish-Client">TOUCHFISH-CLIENT(TouchFish Astra Nextgen)</a>  
+  <a href="https://github.com/ILoveScratch2/TouchFish-Astra">TOUCHFISH-ASTRA(旧版)</a>
+</div>
+
+> [!IMPORTANT]  
+> 更新：
+>
+> TouchFish v5 即将进行开发，TouchFish-Astra 将作为 TouchFish 官方支持的客户端，TouchFish-Astra主项目改为`TouchFish Client`名称
+>
+> 请前往[TouchFish Client(Astra Nextgen)](https://github.com/ILoveScratch2/TouchFish-Client)使用新的 TouchFish V5 客户端
+>
+> TouchFish-Astra 旧版 将不再进行更新！
+> 
+> - ILoveScratch on 2026.1.23
+
 > [!IMPORTANT]  
 > 更新：
 >
